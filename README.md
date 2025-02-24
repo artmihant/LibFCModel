@@ -31,13 +31,10 @@ fc_model.save(outputpath)
 
 ## Посткриптум ##
 
-Если вы заметили ошибку, напишите в телеграмм @artmihant.
+Если вы заметили ошибку, телеграмируйте @artmihant.
 
 ## Cсылки на материалы ##
 
-https://www.cs.auckland.ac.nz/compsci716s2t/resources/VTK_file-formats.pdf
-https://kitware.github.io/vtk-examples/site/VTKFileFormats/
-https://clare.office.saldlab.com/wiki/%D0%A4%D0%BE%D1%80%D0%BC%D0%B0%D1%82_Fidesys_Case
-vtk_code: [name, count_nodes, edges_struct, trangles_struct]
-file:///CAE-Fidesys/preprocessor/bin/help/fidesyshelp.htm
+1. ./src/FidesysCase.html
+2. file:///CAE-Fidesys/preprocessor/bin/help/fidesyshelp.htm
 

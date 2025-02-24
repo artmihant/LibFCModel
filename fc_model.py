@@ -1456,7 +1456,7 @@ class FCModel:
 
 if __name__ == '__main__':
     name = "cube"
-    datapath = "./"
+    datapath = "./data/"
 
     inputpath = os.path.join(datapath, f"{name}.fc")
     outputpath = os.path.join(datapath, f"{name}_new.fc")
