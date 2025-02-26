@@ -429,7 +429,8 @@ class FCDict(Generic[T]):
 
     def __setitem__(self, key:int, item: T):
         item['id'] = key
-        self.max_id = max(self.max_id, item['id'])
+        if self.max_id < item['id']:
+            self.max_id = item['id']
         self.data[item['id']] = item
 
     def __contains__(self, key):
@@ -594,13 +595,13 @@ class FCElems:
             fc_type = FC_ELEMENT_TYPES[elem_types[i]]
             assert fc_type['order'] == elem_orders[i]
 
-            self.data[fc_type['name']].add({
+            self.data[fc_type['name']][eid] = {
                 'id': eid,
                 'type': fc_type,
                 'nodes': elem_nodes[elem_offsets[i]:elem_offsets[i+1]].tolist(),
                 'block': elem_blocks[i],
                 'parent_id': elem_parent_ids[i],
-            })
+            }
 
 
     def encode(self):
@@ -858,7 +859,6 @@ class FCModel:
                 input_data = json.load(f)
 
             self.src_data = input_data
-
             self._decode_header(input_data)
             self._decode_blocks(input_data)
             self._decode_coordinate_systems(input_data)
@@ -906,12 +906,12 @@ class FCModel:
 
     def _decode_blocks(self, input_data):
         for block in input_data.get('blocks'):
-            self.blocks.add({
+            self.blocks[block['id']] = {
                 "id": block['id'],
                 "material_id": block['material_id'],
                 "property_id": block['property_id'],
                 "cs_id": block['cs_id']
-            })
+            }
 
 
     def _encode_blocks(self, output_data):
@@ -927,14 +927,14 @@ class FCModel:
     def _decode_coordinate_systems(self, input_data):
 
         for cs in input_data.get('coordinate_systems'):
-            self.coordinate_systems.add({
+            self.coordinate_systems[cs['id']] = {
                 'dir1': decode(cs['dir1'], dtype(float64)),
                 'dir2': decode(cs['dir2'], dtype(float64)),
                 'origin': decode(cs['origin'], dtype(float64)),
                 "id": cs['id'],
                 "name": cs['name'],
                 "type": cs['type']
-            })
+            }
 
     def _encode_coordinate_systems(self, output_data):
 
@@ -955,7 +955,7 @@ class FCModel:
             master = decode(cc_src['master'], dtype(int32))
             slave = decode(cc_src['slave'], dtype(int32))
 
-            self.contact_constraints.add({
+            self.contact_constraints[cc_src['id']] = {
                 'id': cc_src['id'],
                 'name': cc_src['name'],
                 'type': cc_src['type'],
@@ -970,7 +970,7 @@ class FCModel:
                         'master','master_size',
                         'slave','slave_size',
                     ]}
-            })
+            }
 
 
     def _encode_contact_constraints(self, output_data):
@@ -999,7 +999,7 @@ class FCModel:
             master = decode(cc_src['master'], dtype(int32))
             slave = decode(cc_src['slave'], dtype(int32))
 
-            self.coupling_constraints.add({
+            self.coupling_constraints[cc_src['id']] = {
                 'id': cc_src['id'],
                 'name': cc_src['name'],
                 'type': cc_src['type'],
@@ -1014,7 +1014,7 @@ class FCModel:
                         'master','master_size',
                         'slave','slave_size',
                     ]}
-            })
+            }
 
 
     def _encode_coupling_constraints(self, output_data):
@@ -1042,18 +1042,18 @@ class FCModel:
         if 'sets' in src_data:
 
             for nodeset_src in src_data['sets'].get('nodesets', []):
-                self.nodesets.add({
+                self.nodesets[nodeset_src['id']] = {
                     'id': nodeset_src['id'],
                     'name': nodeset_src['name'],
                     'apply_to': decode(nodeset_src['apply_to'], dtype(int32))
-                })
+                }
 
             for sideset_src in src_data['sets'].get('sidesets', []):
-                self.sidesets.add({
+                self.sidesets[sideset_src['id']] = {
                     'id': sideset_src['id'],
                     'name': sideset_src['name'],
                     'apply_to': decode(sideset_src['apply_to'], dtype(int32)),
-                })
+                }
 
 
 
@@ -1087,10 +1087,11 @@ class FCModel:
         node_coords = decode(src_data['mesh']['nodes'], dtype('float64')).reshape(-1, 3)
 
         for i, nid in enumerate(node_ids):
-            self.nodes.add({
+
+            self.nodes[nid] = {
                 'id': nid,
                 'xyz':node_coords[i]
-            })
+            }
 
         self.elems.decode(src_data['mesh'])
 
@@ -1124,12 +1125,12 @@ class FCModel:
 
     def _decode_property_tables(self, src_data):
         for property_table in src_data.get('property_tables', []):
-            self.property_tables.add({
+            self.property_tables[property_table['id']] = {
                 'id': property_table['id'],
                 'type': property_table['type'],
                 'properties': property_table['properties'],
                 'additional_properties': {key:property_table[key] for key in property_table if key not in ['id', 'type', 'properties']},
-            })
+            }
 
 
     def _encode_property_tables(self, src_data):
@@ -1171,11 +1172,11 @@ class FCModel:
 
                         properties[property_name].append(property)
 
-            self.materials.add({
+            self.materials[material_src['id']] = {
                 "id": material_src['id'],
                 "name": material_src['name'],
                 "properties": properties
-            })
+            }
 
 
     def _encode_materials(self, src_data):
@@ -1230,13 +1231,13 @@ class FCModel:
             if type(apply_to) != str:
                 assert len(apply_to) == restraint_src['apply_to_size']
 
-            self.restraints.add({
+            self.restraints[restraint_src['id']] = {
                 "id": restraint_src['id'],
                 "name": restraint_src['name'],
                 "cs": restraint_src['cs'] if 'cs' in restraint_src else 0,
                 "apply_to": apply_to,
                 "axes": axes,
-            })
+            }
 
 
     def _encode_restraints(self, src_data):
@@ -1309,7 +1310,7 @@ class FCModel:
                 assert apply_to_size != 0 and  len(apply_to)%apply_to_size == 0
                 apply_dim = len(apply_to)//apply_to_size
 
-            self.loads.add({
+            self.loads[load_src['id']] = {
                 "id": load_src['id'],
                 "name": load_src['name'],
                 "cs": load_src['cs'] if 'cs' in load_src else 0,
@@ -1317,7 +1318,7 @@ class FCModel:
                 "apply_dim": apply_dim,
                 "axes": axes,
                 "type": load_src['type'],
-            })
+            }
 
 
     def _encode_loads(self, src_data):
@@ -1365,7 +1366,7 @@ class FCModel:
             }
             assert len(receiver['apply_to']) == r['apply_to_size']
 
-            self.receivers.add(receiver)
+            self.receivers[r['id']] = receiver
 
 
     def _encode_receivers(self, src_data):
@@ -1455,7 +1456,7 @@ class FCModel:
 
 
 if __name__ == '__main__':
-    name = "cube"
+    name = "model5_rec_fix_bc"
     datapath = "./data/"
 
     inputpath = os.path.join(datapath, f"{name}.fc")
