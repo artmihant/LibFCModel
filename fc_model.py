@@ -10,357 +10,21 @@ from numpy import ndarray, dtype, int8, int32, int64, float64
 
 """ Version 4.0 """
 
+from constants import (
+    FC_ELEMENT_TYPES,
+    FCElementType,
+    MATERIAL_PROPERTY_TYPES,
+    MATERIAL_PROPERTY_TYPES_REVERSE,
+    CONST_NAME_MAP,
+    CONST_NAME_REVERSE,
+    DEPENDENCY_TYPES,
+    DEPENDENCY_TYPES_REVERSE,
+)
+
 # https://clare.office.saldlab.com/wiki/%D0%A4%D0%BE%D1%80%D0%BC%D0%B0%D1%82_Fidesys_Case
 
 
-class FCElementType(TypedDict):
-    name: str
-    fc_id: int
-    dim: int
-    order: int
-    nodes: int
-    structure: Dict[int, np.ndarray]
-    edges: List[List[int]]
-    facets: List[List[int]]
-    tetras: List[List[int]]
-
-
-FC_ELEMENT_TYPES: Dict[int,FCElementType] = {
-    0: {
-        'name': 'NONE',
-        'fc_id': 0,
-        'dim': 0,
-        'order': 0,
-        'nodes': 0,
-        'edges': [],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    38: {
-        'name': 'LUMPMASS3D',
-        'fc_id': 38,
-        'dim': 0,
-        'order': 1,
-        'nodes': 1,
-        'edges': [],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    99: {
-        'name': 'POINT3D',
-        'fc_id': 99,
-        'dim': 0,
-        'order': 1,
-        'nodes': 1,
-        'edges': [],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    100: {
-        'name': 'POINT2D',
-        'fc_id': 100,
-        'dim': 0,
-        'order': 1,
-        'nodes': 1,
-        'edges': [],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    101: {
-        'name': 'POINT6D',
-        'fc_id': 101,
-        'dim': 0,
-        'order': 1,
-        'nodes': 1,
-        'edges': [],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    36: {
-        'name': 'BEAM2a',
-        'fc_id': 36,
-        'dim': 1,
-        'order': 1,
-        'nodes': 2,
-        'edges': [[0, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    37: {
-        'name': 'BEAM3a',
-        'fc_id': 37,
-        'dim': 1,
-        'order': 2,
-        'nodes': 3,
-        'edges': [[0, 2, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    39: {
-        'name': 'SPRING3D',
-        'fc_id': 39,
-        'dim': 1,
-        'order': 1,
-        'nodes': 2,
-        'edges': [[0, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    89: {
-        'name': 'BEAM2b',
-        'fc_id': 89,
-        'dim': 1,
-        'order': 1,
-        'nodes': 2,
-        'edges': [[0, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    90: {
-        'name': 'BEAM3b',
-        'fc_id': 90,
-        'dim': 1,
-        'order': 2,
-        'nodes': 3,
-        'edges': [[0, 2, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    107: {
-        'name': 'BAR2',
-        'fc_id': 107,
-        'dim': 1,
-        'order': 1,
-        'nodes': 2,
-        'edges': [[0, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    108: {
-        'name': 'BAR3',
-        'fc_id': 108,
-        'dim': 1,
-        'order': 2,
-        'nodes': 3,
-        'edges': [[0, 2, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    109: {
-        'name': 'CABLE2',
-        'fc_id': 109,
-        'dim': 1,
-        'order': 1,
-        'nodes': 2,
-        'edges': [[0, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-    110: {
-        'name': 'CABLE3',
-        'fc_id': 110,
-        'dim': 1,
-        'order': 2,
-        'nodes': 3,
-        'edges': [[0, 2, 1]],
-        'facets': [],
-        'tetras': [],
-        'structure': {}
-    },
-   10: {
-        'name': 'TRI3',
-        'fc_id': 10,
-        'dim': 2,
-        'order': 1,
-        'nodes': 3,
-        'edges': [[0, 1, 2, 0]],
-        'facets': [[0, 1, 2]],
-        'tetras': [],
-        'structure': {}
-    },
-    11: {
-        'name': 'TRI6',
-        'fc_id': 11,
-        'dim': 2,
-        'order': 2,
-        'nodes': 6,
-        'edges': [[0, 3, 1, 4, 2, 5, 0]],
-        'facets': [[0, 3, 1, 4, 2, 5]],
-        'tetras': [],
-        'structure': {}
-    },
-    12: {
-        'name': 'QUAD4',
-        'fc_id': 12,
-        'dim': 2,
-        'order': 1,
-        'nodes': 4,
-        'edges': [[0, 1, 2, 3, 0]],
-        'facets': [[0, 1, 2, 3]],
-        'tetras': [],
-        'structure': {}
-    },
-    13: {
-        'name': 'QUAD8',
-        'fc_id': 13,
-        'dim': 2,
-        'order': 2,
-        'nodes': 8,
-        'edges': [[0, 4, 1, 5, 2, 6, 3, 7, 0]],
-        'facets': [[0, 4, 1, 5, 2, 6, 3, 7]],
-        'tetras': [],
-        'structure': {}
-    },
-    29: {
-        'name': 'MITC3',
-        'fc_id': 29,
-        'dim': 2,
-        'order': 1,
-        'nodes': 3,
-        'edges': [[0, 1, 2, 0]],
-        'facets': [[0, 1, 2]],
-        'tetras': [],
-        'structure': {}
-    },
-    30: {
-        'name': 'MITC6',
-        'fc_id': 30,
-        'dim': 2,
-        'order': 2,
-        'nodes': 6,
-        'edges': [[0, 3, 1, 4, 2, 5, 0]],
-        'facets': [[0, 3, 1, 4, 2, 5]],
-        'tetras': [],
-        'structure': {}
-    },
-    31: {
-        'name': 'MITC4',
-        'fc_id': 31,
-        'dim': 2,
-        'order': 1,
-        'nodes': 4,
-        'edges': [[0, 1, 2, 3, 0]],
-        'facets': [[0, 1, 2, 3]],
-        'tetras': [],
-        'structure': {}
-    },
-    32: {
-        'name': 'MITC8',
-        'fc_id': 32,
-        'dim': 2,
-        'order': 2,
-        'nodes': 8,
-        'edges': [[0, 4, 1, 5, 2, 6, 3, 7, 0]],
-        'facets': [[0, 4, 1, 5, 2, 6, 3, 7]],
-        'tetras': [],
-        'structure': {}
-    },
-    1: {
-        'name': 'TETRA4',
-        'fc_id': 1,
-        'dim': 3,
-        'order': 1,
-        'nodes': 4,
-        'edges': [[0, 1, 2, 0], [0, 3], [1, 3], [2, 3]],
-        'facets': [[0, 2, 1], [0, 1, 3], [1, 2, 3], [2, 0, 3]],
-        'tetras': [[0, 1, 2, 3]],
-        'structure': {}
-    },
-    2: {
-        'name': 'TETRA10',
-        'fc_id': 2,
-        'dim': 3,
-        'order': 2,
-        'nodes': 10,
-        'edges': [[0, 4, 1, 5, 2, 6, 0], [0, 7, 3], [1, 8, 3], [2, 9, 3]],
-        'facets': [[0, 6, 2, 5, 1, 4], [0, 4, 1, 8, 3, 5], [1, 5, 2, 9, 3, 8], [2, 6, 0, 5, 3, 9]],
-        'tetras': [],
-        'structure': {}
-    },
-    3: {
-        'name': 'HEX8',
-        'fc_id': 3,
-        'dim': 3,
-        'order': 1,
-        'nodes': 8,
-        'edges': [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4], [0, 4], [1, 5], [2, 6], [3, 7]],
-        'facets': [[3, 2, 1, 0], [4, 5, 6, 7], [1, 2, 6, 5], [0, 1, 5, 4], [0, 4, 7, 3], [2, 3, 7, 6]],
-        'tetras': [[1, 3, 4, 6], [3, 1, 4, 0], [1, 3, 6, 2], [4, 1, 6, 5], [3, 4, 6, 7]],
-        'structure': {}
-    },
-    4: {
-        'name': 'HEX20',
-        'fc_id': 4,
-        'dim': 3,
-        'order': 2,
-        'nodes': 20,
-        'edges': [[0, 8, 1, 9, 2, 10, 3, 11, 0], [4, 12, 5, 13, 6, 14, 7, 15, 4],
-                  [0, 0, 4], [1, 0, 5], [2, 0, 6], [3, 0, 7]],
-        'facets': [[3, 10, 2, 9, 1, 8, 0, 11], [4, 12, 5, 13, 6, 14, 7, 15], [1, 9, 2, 18, 6, 13, 5, 17],
-                   [0, 8, 1, 17, 5, 12, 4, 16], [0, 16, 4, 15, 7, 19, 3, 11], [2, 10, 3, 19, 7, 14, 6, 18]],
-        'tetras': [],
-        'structure': {}
-    },
-    6: {
-        'name': 'WEDGE6',
-        'fc_id': 6,
-        'dim': 3,
-        'order': 1,
-        'nodes': 5,
-        'edges': [[0, 1, 2, 0], [3, 4, 5, 3], [0, 3], [1, 4], [2, 5]],
-        'facets': [[0, 1, 2], [5, 4, 3], [0, 2, 5, 3], [0, 3, 4, 1], [1, 4, 5, 2]],
-        'tetras': [[0, 5, 4, 3], [0, 4, 2, 1], [0, 2, 4, 5]],
-        'structure': {}
-    },
-    7: {
-        'name': 'WEDGE15',
-        'fc_id': 7,
-        'dim': 3,
-        'order': 2,
-        'nodes': 15,
-        'edges': [[0, 5, 1, 6, 2, 7, 3, 8, 0], [0, 9, 4], [1, 10, 4], [2, 11, 4], [3, 12, 4]],
-        'facets': [[3, 7, 2, 6, 1, 5, 0, 8],
-                   [0, 5, 1, 10, 4, 9], [1, 6, 2, 11, 4, 10], [2, 7, 3, 12, 4, 11], [3, 8, 0, 9, 4, 12]],
-        'tetras': [],
-        'structure': {}
-    },
-    8: {
-        'name': 'PYR5',
-        'fc_id': 8,
-        'dim': 3,
-        'order': 1,
-        'nodes': 5,
-        'edges': [[0, 1, 2, 3, 0], [0, 4], [1, 4], [2, 4], [3, 4]],
-        'facets': [[3, 2, 1, 0], [0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4]],
-        'tetras': [[1, 3, 4, 0], [3, 4, 1, 2]],
-        'structure': {}
-    },
-    9: {
-        'name': 'PYR13',
-        'fc_id': 9,
-        'dim': 3,
-        'order': 2,
-        'nodes': 13,
-        'edges': [[0, 5, 1, 6, 2, 7, 3, 8, 0], [0, 9, 4], [1, 10, 4], [2, 11, 4], [3, 12, 4]],
-        'facets': [[3, 7, 2, 6, 1, 5, 0, 8],
-                   [0, 5, 1, 10, 4, 9], [1, 6, 2, 11, 4, 10], [2, 7, 3, 12, 4, 11], [3, 8, 0, 9, 4, 12]],
-        'tetras': [],
-        'structure': {}
-    }
-}
+ 
 
 
 def split_facet(facet: List[int]) -> List[int]:
@@ -418,6 +82,7 @@ def make_structure():
 
             element_type['structure'][3] = np.array(tetras, dtype=np.int32)
 
+# Инициализация предрасчитанных структур для типов элементов
 make_structure()
 
 
@@ -744,8 +409,6 @@ class FCElems:
         return self.data[item['type']['name']].add(item)
 
 
-
-
 class FCDependency(TypedDict):
     """
     Определяет зависимость свойства материала от внешних факторов (температура, координаты, etc.).
@@ -869,7 +532,7 @@ def decode_dependency(deps_types: Union[List[int], int, str], dep_data) -> Union
     if isinstance(deps_types, list):
 
         return [{
-            "type": deps_type,
+            "type": DEPENDENCY_TYPES.get(deps_type, deps_type),
             "data": fdecode(dep_data[j], dtype(float64))
         } for j, deps_type in enumerate(deps_types)]
 
@@ -879,9 +542,10 @@ def decode_dependency(deps_types: Union[List[int], int, str], dep_data) -> Union
 
 def encode_dependency(dependency: Union[List[FCDependency], int, str]):
     if isinstance(dependency, int) or isinstance(dependency, str):
-        return dependency, ''
+        code = DEPENDENCY_TYPES_REVERSE.get(dependency, dependency)
+        return code, ''
     elif isinstance(dependency, list):
-        return [deps['type'] for deps in dependency], [fencode(deps['data']) for deps in dependency]
+        return [DEPENDENCY_TYPES_REVERSE.get(deps['type'], deps['type']) for deps in dependency], [fencode(deps['data']) for deps in dependency]
 
 
 class FCModel:
@@ -1346,10 +1010,15 @@ class FCModel:
                 for property_src in properties_src:
                     for i, constants in enumerate(property_src["constants"]):
 
+                        type_code = property_src["type"]
+                        type_name = MATERIAL_PROPERTY_TYPES.get(property_name, {}).get(type_code, type_code)
+                        const_code = property_src["const_names"][i]
+                        const_name = CONST_NAME_MAP.get(property_name, {}).get(const_code, const_code)
+
                         property: FCMaterialProperty = {
-                            "name": property_src["const_names"][i],
+                            "name": const_name,
                             "data": decode(constants, dtype(float64)),
-                            "type": property_src["type"],
+                            "type": type_name,
                             "dependency": decode_dependency(
                                 property_src["const_types"][i],
                                 property_src["const_dep"][i]
@@ -1405,7 +1074,18 @@ class FCModel:
                         property_groups[material_property["type"]]['const_types'].append(const_types)
                         property_groups[material_property["type"]]['constants'].append(fencode(material_property["data"]))
                     
-                    material_src[property_type] = [property_groups[i] for i in property_groups]
+                    remapped = []
+                    for key in property_groups:
+                        group = property_groups[key]
+                        type_code = MATERIAL_PROPERTY_TYPES_REVERSE.get(property_type, {}).get(group['type'] if 'type' in group else key, key)
+                        group_out = dict(group)
+                        group_out['type'] = type_code
+                        # map constant names back to codes
+                        group_out['const_names'] = [
+                            CONST_NAME_REVERSE.get(property_type, {}).get(n, n) for n in group_out['const_names']
+                        ]
+                        remapped.append(group_out)
+                    material_src[property_type] = remapped
 
                 src_data['materials'].append(material_src)
 

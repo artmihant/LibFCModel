@@ -433,7 +433,7 @@ strength
    1 = TENSILE_STRENGTH_COMPR
 ```
 
-### property\_tables
+### property_tables
 
 ```
 [
