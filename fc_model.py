@@ -49,7 +49,7 @@ FC_ELEMENT_TYPES: Dict[int,FCElementType] = {
         'structure': {}
     },
     99: {
-        'name': 'POINT2D',
+        'name': 'POINT3D',
         'fc_id': 99,
         'dim': 0,
         'order': 1,
@@ -59,8 +59,19 @@ FC_ELEMENT_TYPES: Dict[int,FCElementType] = {
         'tetras': [],
         'structure': {}
     },
+    100: {
+        'name': 'POINT2D',
+        'fc_id': 100,
+        'dim': 0,
+        'order': 1,
+        'nodes': 1,
+        'edges': [],
+        'facets': [],
+        'tetras': [],
+        'structure': {}
+    },
     101: {
-        'name': 'VERTEX1',
+        'name': 'POINT6D',
         'fc_id': 101,
         'dim': 0,
         'order': 1,
@@ -148,7 +159,7 @@ FC_ELEMENT_TYPES: Dict[int,FCElementType] = {
         'structure': {}
     },
     109: {
-        'name': 'CABEL2',
+        'name': 'CABLE2',
         'fc_id': 109,
         'dim': 1,
         'order': 1,
@@ -159,7 +170,7 @@ FC_ELEMENT_TYPES: Dict[int,FCElementType] = {
         'structure': {}
     },
     110: {
-        'name': 'CABEL3',
+        'name': 'CABLE3',
         'fc_id': 110,
         'dim': 1,
         'order': 2,
@@ -839,7 +850,7 @@ class FCSet(TypedDict):
     name: str
 
 
-class FCReciver(TypedDict):
+class FCReceiver(TypedDict):
     apply_to: Union[NDArray[int32], str]
     dofs: List[int]
     id: int
@@ -928,7 +939,7 @@ class FCModel:
     periodic_constraints: List[FCConstraint]
 
 
-    receivers: List[FCReciver]
+    receivers: List[FCReceiver]
 
     nodesets: FCDict[FCSet]
     sidesets: FCDict[FCSet]
@@ -1644,7 +1655,7 @@ class FCModel:
     def _decode_receivers(self, src_data):
 
         for r in src_data.get('receivers', []):
-            receiver: FCReciver = {
+            receiver: FCReceiver = {
                 'apply_to': fdecode(r['apply_to']),
                 'dofs': r['dofs'],
                 "id": r['id'],
