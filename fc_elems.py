@@ -631,178 +631,220 @@ FC_ELEMENT_TYPES: Dict[int, FCElementType] = {
 }
 
 
-# Dependency (const_types) enumeration mapping
-DEPENDENCY_TYPES: Dict[int, str] = {
-    0: "CONSTANT",
-    1: "TABULAR_X",
-    2: "TABULAR_Y",
-    3: "TABULAR_Z",
-    4: "TABULAR_TIME",
-    5: "TABULAR_TEMPERATURE",
-    6: "FORMULA",
-    7: "TABULAR_FREQUENCY",
-    8: "TABULAR_STRAIN",
-    10: "TABULAR_ELEMENT_ID",
-    11: "TABULAR_NODE_ID",
-    12: "TABULAR_MODE_ID",
-}
 
-DEPENDENCY_TYPES_REVERSE: Dict[str, int] = {v: k for k, v in DEPENDENCY_TYPES.items()}
+def split_facet(facet: List[int]) -> List[int]:
+    if len(facet) == 3:
+        return facet
+    if len(facet) < 3:
+        return []
+    tail = facet[2:]
+    tail.append(facet[1])
+    tris = [facet[-1], facet[0], facet[1]]
+    tris.extend(split_facet(tail))
+    return tris
 
 
-# Material property type codes per group
-MATERIAL_PROPERTY_TYPES: Dict[str, Dict[int, str]] = {
-    "elasticity": {
-        0: "HOOK",
-        1: "HOOK_ORTHOTROPIC",
-        2: "HOOK_TRANSVERSAL_ISOTROPIC",
-        3: "BLATZ_KO",
-        4: "MURNAGHAN",
-        11: "COMPR_MOONEY",
-        20: "NEO_HOOK",
-        21: "ANISOTROPIC",
-    },
-    "common": {0: "USUAL"},
-    "thermal": {0: "ISOTROPIC", 1: "ORTHOTROPIC", 2: "TRANSVERSAL_ISOTROPIC"},
-    "geomechanic": {
-        0: "BIOT_ISOTROPIC",
-        1: "BIOT_ORTHOTROPIC",
-        2: "BIOT_TRANSVERSAL_ISOTROPIC",
-    },
-    "plasticity": {0: "MISES", 1: "DRUCKER_PRAGER", 4: "DRUCKER_PRAGER_CREEP", 9: "MOHR_COULOMB"},
-    "hardening": {0: "LINEAR", 1: "MULTILINEAR"},
-    "creep": {0: "NORTON"},
-    "preload": {0: "INITIAL"},
-    "strength": {0: "ISOTROPIC"},
-}
-
-MATERIAL_PROPERTY_TYPES_REVERSE: Dict[str, Dict[str, int]] = {
-    group: {name: code for code, name in mapping.items()} for group, mapping in MATERIAL_PROPERTY_TYPES.items()
-}
+def split_edge(edge: List[int]) -> List[int]:
+    if len(edge) == 2:
+        return edge
+    if len(edge) < 2:
+        return []
+    tail = edge[1:]
+    pairs = [edge[0], edge[1]]
+    pairs.extend(split_edge(tail))
+    return pairs
 
 
-# Constant (const_names) codes per group
-CONST_NAME_MAP: Dict[str, Dict[int, str]] = {
-    "elasticity": {
-        0: "YOUNG_MODULE",
-        1: "POISSON_RATIO",
-        2: "SHEAR_MODULUS",
-        3: "BULK_MODULUS",
-        4: "MU",
-        5: "ALPHA",
-        6: "BETA",
-        7: "LAME_MODULE",
-        8: "C3",
-        9: "C4",
-        10: "C5",
-        16: "E_T",
-        17: "E_L",
-        18: "PR_T",
-        19: "PR_TL",
-        20: "G_TL",
-        21: "G12",
-        22: "G23",
-        23: "G13",
-        24: "PRXY",
-        25: "PRYZ",
-        26: "PRXZ",
-        27: "C1",
-        28: "C2",
-        29: "D",
-        82: "C_1111",
-        83: "C_1112",
-        84: "C_1113",
-        85: "C_1122",
-        86: "C_1123",
-        87: "C_1133",
-        88: "C_1212",
-        89: "C_1213",
-        90: "C_1222",
-        91: "C_1223",
-        92: "C_1233",
-        93: "C_1313",
-        94: "C_1322",
-        95: "C_1323",
-        96: "C_1333",
-        97: "C_2222",
-        98: "C_2223",
-        99: "C_2233",
-        100: "C_2323",
-        101: "C_2333",
-        102: "C_3333",
-    },
-    "common": {0: "DENSITY", 1: "STRUCTURAL_DAMPING_RATIO", 2: "MASS_DAMPING_RATIO", 3: "STIFFNESS_DAMPING_RATIO"},
-    "thermal": {
-        0: "COEF_LIN_EXPANSION",
-        1: "COEF_THERMAL_CONDUCTIVITY",
-        5: "COEF_THERMAL_CONDUCTIVITY_XX",
-        9: "COEF_THERMAL_CONDUCTIVITY_YY",
-        13: "COEF_THERMAL_CONDUCTIVITY_ZZ",
-        14: "COEF_LIN_EXPANSION_X",
-        15: "COEF_LIN_EXPANSION_Y",
-        16: "COEF_LIN_EXPANSION_Z",
-        17: "COEF_THERMAL_CONDUCTIVITY_T",
-        18: "COEF_THERMAL_CONDUCTIVITY_L",
-        19: "COEF_LIN_EXPANSION_T",
-        20: "COEF_LIN_EXPANSION_L",
-    },
-    "geomechanic": {
-        1: "FLUID_VISCOSITY",
-        2: "POROSITY",
-        3: "FLUID_BULK_MODULUS",
-        4: "SOLID_BULK_MODULUS",
-        19: "FLUID_DENSITY",
-        20: "BIOT_MODULUS",
-        0: "PERMEABILITY",
-        5: "BIOT_ALPHA",
-        6: "PERMEABILITY_XX",
-        7: "PERMEABILITY_XY",
-        8: "PERMEABILITY_XZ",
-        9: "PERMEABILITY_YX",
-        10: "PERMEABILITY_YY",
-        11: "PERMEABILITY_YZ",
-        12: "PERMEABILITY_ZX",
-        13: "PERMEABILITY_ZY",
-        14: "PERMEABILITY_ZZ",
-        21: "BIOT_ALPHA_X",
-        22: "BIOT_ALPHA_Y",
-        23: "BIOT_ALPHA_Z",
-        15: "PERMEABILITY_T",
-        16: "PERMEABILITY_TT",
-        17: "PERMEABILITY_TL",
-        18: "PERMEABILITY_L",
-        24: "BIOT_ALPHA_T",
-        25: "BIOT_ALPHA_L",
-    },
-    "plasticity": {
-        0: "YIELD_STRENGTH",
-        5: "YIELD_STRENGTH_COMPR",
-        7: "COHESION",
-        8: "INTERNAL_FRICTION_ANGLE",
-        9: "DILATANCY_ANGLE",
-        21: "DPC_A",
-        22: "DPC_N",
-        23: "DPC_M",
-    },
-    "hardening": {
-        2: "E_TAN",
-        10: "E_TAN_COMPR",
-        1: "TENSILE_STRAIN",
-        6: "TENSILE_STRAIN_COMPR",
-        0: "COMPRESSIVE_STRAIN",
-        7: "COMPRESSIVE_STRAIN_COMPR",
-        8: "STRESS",
-        3: "MULTILINEAR_STRESS",
-        9: "HARDENING",
-        4: "HARDENING_COMPR",
-        5: "PLASTIC_STRAIN",
-        11: "PLASTIC_STRAIN_COMPR",
-        12: "TABULAR_MODE_ID",
-    },
-}
+def split_polihedron(tetra: List[int]) -> List[int]:
+    return tetra
 
-CONST_NAME_REVERSE: Dict[str, Dict[str, int]] = {
-    group: {name: code for code, name in mapping.items()} for group, mapping in CONST_NAME_MAP.items()
-}
+def make_structure():
+    for eid in FC_ELEMENT_TYPES:
+        element_type = FC_ELEMENT_TYPES[eid]
+        element_type['structure'][0] = np.arange(element_type['nodes'], dtype=np.int32)
 
+        if element_type['dim'] > 0:
+
+            pairs = []
+            for edge in element_type['edges']:
+                pairs.extend(split_edge(edge))
+
+            element_type['structure'][1] = np.array(pairs, dtype=np.int32)
+
+        if element_type['dim'] > 1:
+
+            trangles = []
+            for facet in element_type['facets']:
+                trangles.extend(split_facet(facet))
+
+            element_type['structure'][2] = np.array(trangles, dtype=np.int32)
+
+        if element_type['dim'] > 2:
+
+            tetras = []
+            for tetra in element_type['tetras']:
+                tetras.extend(split_polihedron(tetra))
+
+            element_type['structure'][3] = np.array(tetras, dtype=np.int32)
+
+# Инициализация предрасчитанных структур для типов элементов
+make_structure()
+
+
+
+class FCElem(TypedDict):
+    """
+    Определяет один конечный элемент в сетке.
+    """
+    id: int  # Уникальный идентификатор элемента
+    block: int  # ID блока, к которому принадлежит элемент
+    parent_id: int  # ID родительского элемента (используется при измельчении сетки)
+    type: FCElementType  # Словарь, описывающий тип элемента (e.g., HEX8, TETRA4)
+    nodes: List[int]  # Список ID узлов, образующих элемент
+    order: int  # Порядок элемента (1 - линейный, 2 - квадратичный)
+
+
+class FCNode(TypedDict):
+    """
+    Определяет один узел в конечно-элементной сетке.
+    """
+    id: int  # Уникальный идентификатор узла
+    xyz: NDArray[float64]  # Numpy массив с 3-мя координатами [x, y, z]
+
+
+class FCElems:
+    """
+    Контейнер для хранения всех элементов модели, сгруппированных по типам.
+
+    Внутри `FCElems` элементы хранятся не в одном списке, а в словаре `data`,
+    где ключами являются строковые имена типов элементов (e.g., 'HEX8', 'TETRA4'),
+    а значениями - объекты `FCDict`, содержащие элементы соответствующего типа.
+
+    Этот класс также управляет общей кодировкой и декодировкой всего набора
+    элементов в/из формата .fc.
+    """
+
+    data: Dict[str, FCDict[FCElem]]
+
+    def __init__(self, data=None):
+        self.data = {
+            fc_type['name']: FCDict() for fc_type in FC_ELEMENT_TYPES.values()
+        }
+
+        if data:
+            self.decode(data)
+
+
+    def decode(self, data=None):
+        if data is None:
+            return
+
+        elem_blocks = decode(data.get('elem_blocks', ''))
+        elem_orders = decode(data.get('elem_orders', ''))
+        elem_parent_ids = decode(data.get('elem_parent_ids', ''))
+        elem_types = decode(data.get('elem_types', ''), dtype('int8'))
+        elem_ids = decode(data.get('elemids',''))
+        elem_nodes = decode(data.get('elems', ''))
+
+        elem_sizes = np.vectorize(lambda t: FC_ELEMENT_TYPES[t]['nodes'])(elem_types)
+        elem_offsets = [0, *np.cumsum(elem_sizes)]
+
+        for i, eid in enumerate(elem_ids):
+            fc_type = FC_ELEMENT_TYPES[elem_types[i]]
+
+            self.data[fc_type['name']][eid] = {
+                'id': eid,
+                'type': fc_type,
+                'nodes': elem_nodes[elem_offsets[i]:elem_offsets[i+1]].tolist(),
+                'block': elem_blocks[i],
+                'order': elem_orders[i],
+                'parent_id': elem_parent_ids[i],
+            }
+
+
+    def encode(self):
+
+        elems_count = len(self)
+
+        elem_ids: NDArray = np.zeros(elems_count, np.int32)
+        elem_blocks: NDArray = np.zeros(elems_count, np.int32)
+        elem_orders: NDArray = np.zeros(elems_count, np.int32)
+        elem_parent_ids: NDArray = np.zeros(elems_count, np.int32)
+        elem_types: NDArray = np.zeros(elems_count, np.int8)
+
+        for i, elem in enumerate(self):
+            elem_ids[i] = elem['id']
+            elem_blocks[i] = elem['block']
+            elem_parent_ids[i] = elem['parent_id']
+            elem_orders[i] = elem['order']
+            elem_types[i] = elem['type']['fc_id']
+
+        elem_nodes: NDArray = np.array(self.nodes_list, np.int32)
+
+        return {
+            "elem_blocks": encode(elem_blocks),
+            "elem_orders": encode(elem_orders),
+            "elem_parent_ids": encode(elem_parent_ids),
+            "elem_types": encode(elem_types),
+            "elemids": encode(elem_ids),
+            "elems": encode(elem_nodes),
+            "elems_count": elems_count,
+        }
+
+
+    def __len__(self):
+        return sum([len(self.data[typename]) for typename in self.data])
+
+    def __bool__(self):
+        return len(self) > 0
+
+    def __iter__(self):
+        for typename in self.data:
+            for elem in self.data[typename]:
+                yield elem
+
+    def __contains__(self, key):
+        for tp in self.data:
+            if key in self.data[tp]:
+                return True
+        return False
+
+    def __getitem__(self, key:Union[int, str]):
+        if isinstance(key, str):
+            return self.data[key]
+        elif isinstance(key, int):
+            for typename in self.data:
+                if key in self.data[typename]:
+                    return self.data[typename][key]
+        raise KeyError(f'{key}')
+
+    def __setitem__(self, key:int, item: FCElem):
+        self.data[item['type']['name']].add(item)
+
+    @property
+    def nodes_list(self):
+        return [node for elem in self for node in elem['nodes']]
+
+    def compress(self):
+        index_map = {elem['id']: i + 1 for i, elem in enumerate(self)}
+        self.reindex(index_map)
+        return index_map
+
+    def reindex(self, index_map):
+        for typename in self.data:
+            self.data[typename].reindex(index_map)
+
+    @property
+    def max_id(self):
+        max_id = 0
+        for tp in self.data:
+            if max_id < self.data[tp].max_id:
+                max_id = self.data[tp].max_id
+        return max_id
+
+    def add(self, item: FCElem):
+        if item['id'] in self or item['id'] < 1:
+            item['id'] = self.max_id+1
+
+        return self.data[item['type']['name']].add(item)
 

@@ -1,8 +1,7 @@
 # Формат Fidesys Case
-
-Источник: сохранённая страница Fidesys Wiki.
-
-Примечание: подчёркнутые в оригинале бинарные поля отмечены **жирным**.
+ 
+Источник: страница Fidesys Wiki.
+https://clare.office.saldlab.com/wiki/%D0%A4%D0%BE%D1%80%D0%BC%D0%B0%D1%82_Fidesys_Case
 
 ## Формат входного файла Fidesys
 
