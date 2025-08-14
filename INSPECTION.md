@@ -5,7 +5,7 @@
 ### Общее
 
 - **Назначение библиотеки**: преобразование файла формата Fidesys Case (`.fc`) в удобный Python-объект `FCModel` и обратно.
-- **Совместимость Python**: код использует `typing.TypedDict`, `typing.Literal`, `numpy.typing.NDArray` и явные аннотации через `typing.List/Dict/Union` (без `|`). Это совместимо с Python 3.8. Однако `mypy.ini` задан на `python_version = 3.13`, что расходится с требованием о поддержке 3.8.
+- **Совместимость Python**: код использует `typing.TypedDict`, `typing.Literal`, `numpy.typing.NDArray` и явные аннотации через `typing.List/Dict/Union` (без `|`). Это совместимо с Python 3.8. 
 - **Архитектура**: единый файл `fc_model.py` (~1.6k строк) с наборами `TypedDict` для сущностей, контейнерами (`FCDict`, `FCElems`) и приватными методами `_decode_*`/`_encode_*` для каждого раздела спецификации.
 
 ### Соответствие разделам спецификации

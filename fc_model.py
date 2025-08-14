@@ -418,6 +418,18 @@ T = TypeVar("T", bound=RequiredId)
 
 
 class FCDict(Generic[T]):
+
+    """
+    Специализированный класс-контейнер, похожий на словарь, для хранения
+    объектов, имеющих обязательное поле 'id'.
+
+    Обеспечивает автоматическое присвоение уникальных ID при добавлении
+    новых элементов (если 'id' не указан или равен 0) и отслеживает
+    максимальный использованный ID.
+
+    Используется для хранения узлов, блоков, материалов и т.д.
+    """
+
     data: Dict[int, T]
 
     max_id:int
@@ -496,12 +508,17 @@ def isBase64(sb):
 
 
 def decode(src: str, dtype:dtype = dtype('int32')) -> NDArray:
+    """Декодирует строку base64 в numpy массив с заданным типом данных."""
     if src == '':
         return np.array([], dtype=dtype) # type: ignore
     return np.frombuffer(b64decode(src), dtype) # type: ignore
 
 
 def fdecode(src: str, dtype:dtype = dtype('int32')) -> Union[NDArray, str]:
+    """
+    "Гибкое" декодирование. Если строка является base64, декодирует ее в numpy массив.
+    В противном случае, возвращает строку как есть (например, для значения 'all').
+    """
     if src == '':
         return np.array([], dtype=dtype) # type: ignore
     if isBase64(src):
@@ -510,6 +527,7 @@ def fdecode(src: str, dtype:dtype = dtype('int32')) -> Union[NDArray, str]:
 
 
 def encode(data: ndarray) -> str:
+    """Кодирует numpy массив в строку base64."""
     return b64encode(data.tobytes()).decode()
 
 
@@ -520,6 +538,7 @@ def fencode(data: Union[ndarray,str, int]) -> str:
         return str(data)
     if isinstance(data, ndarray):
         return encode(data)
+    return ''
 
 
 class FCHeader(TypedDict):
@@ -535,10 +554,15 @@ class FCHeader(TypedDict):
 
 
 class FCBlock(TypedDict):
-    id: int
-    cs_id: int
-    material_id: int
-    property_id: int
+    """
+    Определяет 'блок' элементов.
+    Блок - это группа элементов, которая ссылается на один и тот же материал
+    и имеет общие свойства.
+    """
+    id: int  # Уникальный идентификатор блока
+    cs_id: int  # ID системы координат
+    material_id: int  # ID материала, из которого состоит блок
+    property_id: int  # ID таблицы свойств (если используется)
     # steps: NotRequired[NDArray[int32]]
     # material: NotRequired[FCBlockMaterialSteps]
 
@@ -553,20 +577,36 @@ class FCCoordinateSystem(TypedDict):
 
 
 class FCElem(TypedDict):
-    id: int
-    block: int
-    parent_id: int
-    type: FCElementType
-    nodes: List[int]
-    order: int
+    """
+    Определяет один конечный элемент в сетке.
+    """
+    id: int  # Уникальный идентификатор элемента
+    block: int  # ID блока, к которому принадлежит элемент
+    parent_id: int  # ID родительского элемента (используется при измельчении сетки)
+    type: FCElementType  # Словарь, описывающий тип элемента (e.g., HEX8, TETRA4)
+    nodes: List[int]  # Список ID узлов, образующих элемент
+    order: int  # Порядок элемента (1 - линейный, 2 - квадратичный)
 
 
 class FCNode(TypedDict):
-    id: int
-    xyz: NDArray[float64]
+    """
+    Определяет один узел в конечно-элементной сетке.
+    """
+    id: int  # Уникальный идентификатор узла
+    xyz: NDArray[float64]  # Numpy массив с 3-мя координатами [x, y, z]
 
 
 class FCElems:
+    """
+    Контейнер для хранения всех элементов модели, сгруппированных по типам.
+
+    Внутри `FCElems` элементы хранятся не в одном списке, а в словаре `data`,
+    где ключами являются строковые имена типов элементов (e.g., 'HEX8', 'TETRA4'),
+    а значениями - объекты `FCDict`, содержащие элементы соответствующего типа.
+
+    Этот класс также управляет общей кодировкой и декодировкой всего набора
+    элементов в/из формата .fc.
+    """
 
     data: Dict[str, FCDict[FCElem]]
 
@@ -696,15 +736,21 @@ class FCElems:
 
 
 class FCDependency(TypedDict):
-    type: int
-    data: Union[NDArray[float64], str, int]
+    """
+    Определяет зависимость свойства материала от внешних факторов (температура, координаты, etc.).
+    """
+    type: int  # Форма задания зависимости (e.g., 11 - от ID узлов, 10 - от ID элементов)
+    data: Union[NDArray[float64], str, int]  # Данные для зависимости (e.g., массив ID узлов)
 
 
 class FCMaterialProperty(TypedDict):
-    type: int
-    name: int
-    data: Union[NDArray[float64], str]
-    dependency: Union[List[FCDependency], int, str]
+    """
+    Определяет одно физическое свойство материала (e.g., плотность, модуль Юнга).
+    """
+    type: int  # Дополнительный ID типа свойства (обычно 0, но не всегда)
+    name: int  # ID типа свойства (например, 0 - для плотности, если FCMaterialProperty относится к common)
+    data: Union[NDArray[float64], str]  # Значение свойства (константа или массив для зависимостей)
+    dependency: Union[List[FCDependency], int, str]  # Описание зависимости свойства
 
 
 FCMaterialPropertiesTypes = Literal[
@@ -723,9 +769,12 @@ FCMaterialProperties = Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]]
 
 
 class FCMaterial(TypedDict):
-    id: int
-    name: str
-    properties: FCMaterialProperties
+    """
+    Определяет материал и набор его физических свойств.
+    """
+    id: int  # Уникальный идентификатор материала
+    name: str  # Имя материала
+    properties: FCMaterialProperties  # Словарь, где свойства сгруппированы по типам
 
 
 class FCConstraint(TypedDict):
@@ -825,6 +874,34 @@ def encode_dependency(dependency: Union[List[FCDependency], int, str]):
 
 
 class FCModel:
+    """
+    Основной класс для представления, загрузки и сохранения модели в формате Fidesys Case (.fc).
+
+    Представляет собой контейнер для всех сущностей модели: узлов, элементов,
+    материалов, нагрузок, закреплений и т.д.
+
+    Атрибуты:
+        header (FCHeader): Заголовок файла.
+        coordinate_systems (FCDict[FCCoordinateSystem]): Коллекция систем координат.
+        nodes (FCDict[FCNode]): Коллекция узлов сетки.
+        elems (FCElems): Контейнер для коллекций элементов различных типов.
+        blocks (FCDict[FCBlock]): Коллекция блоков, связывающих элементы с материалами.
+        materials (FCDict[FCMaterial]): Коллекция материалов и их физических свойств.
+        loads (List[FCLoad]): Список нагрузок, приложенных к модели.
+        restraints (List[FCRestraint]): Список закреплений (ограничений).
+        ... и другие коллекции сущностей.
+
+    Пример использования:
+    
+    # Создание или загрузка модели
+    model = FCModel() # Создать пустую модель
+    # model = FCModel(filepath="path/to/model.fc") # Загрузить из файла
+
+    # ... (добавление узлов, элементов, материалов)
+
+    # Сохранение модели
+    model.save("new_model.fc")
+    """
 
     header: FCHeader = {
         "binary": True,
@@ -860,7 +937,17 @@ class FCModel:
 
 
     def __init__(self, filepath=None):
+        """
+        Инициализирует объект FCModel.
 
+        Если указан `filepath`, модель будет загружена из этого файла.
+        В противном случае будет создана пустая модель с инициализированными коллекциями.
+
+        Args:
+            filepath (str, optional): Путь к файлу .fc для загрузки. Defaults to None.
+        """
+        
+        # Инициализация всех коллекций как пустых
         self.coordinate_systems = FCDict()
 
         self.nodes = FCDict()
@@ -905,6 +992,16 @@ class FCModel:
 
 
     def save(self, filepath):
+        """
+        Сохраняет текущее состояние модели в файл формата .fc.
+
+        Собирает данные из всех коллекций (узлы, элементы, материалы и т.д.),
+        кодирует их в нужный формат (JSON с base64 для бинарных данных)
+        и записывает в указанный файл.
+
+        Args:
+            filepath (str): Путь к файлу, в который будет сохранена модель.
+        """
 
         output_data: Dict = {}
 
@@ -1574,8 +1671,8 @@ class FCModel:
 
 
 if __name__ == '__main__':
-    name = "ultacube"
-    datapath = "./data/"
+    name = "profile_model_local"
+    datapath = "/home/antonov/Base/Coworks/CoworkMilenteva/"
 
     inputpath = os.path.join(datapath, f"{name}.fc")
     outputpath = os.path.join(datapath, f"{name}_new.fc")

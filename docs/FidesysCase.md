@@ -81,7 +81,7 @@
 ]
 ```
 
-### coordinate\_system
+### coordinate_system
 
 ```
 [
