@@ -1,9 +1,10 @@
 # Material property type codes per group
 from typing import Dict, List, Literal, TypedDict, Union
 
-from numpy import float64
+from numpy import dtype, float64
 from numpy.typing import NDArray
 
+from fc_value import DataArray, decode, fdecode, fencode
 from fc_dependency import FCDependency
 
 
@@ -166,10 +167,10 @@ class FCMaterialProperty(TypedDict):
     """
     Определяет одно физическое свойство материала (e.g., плотность, модуль Юнга).
     """
-    type: int  # Дополнительный ID типа свойства (обычно 0, но не всегда)
-    name: int  # ID типа свойства (например, 0 - для плотности, если FCMaterialProperty относится к common)
-    data: Union[NDArray[float64], str]  # Значение свойства (константа или массив для зависимостей)
-    dependency: Union[List[FCDependency], int, str]  # Описание зависимости свойства
+    type: str  # Дополнительный ID типа свойства (обычно 0, но не всегда)
+    name: str  # ID типа свойства (например, 0 - для плотности, если FCMaterialProperty относится к common)
+    data: DataArray  # Значение свойства (константа или массив для зависимостей)
+    dependency: FCDependency  # Описание зависимости свойства
 
 
 FCMaterialPropertiesTypes = Literal[
@@ -184,14 +185,80 @@ FCMaterialPropertiesTypes = Literal[
     "strength" # Прочность
 ]
 
-FCMaterialProperties = Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]]
+class SrcFCMaterial(TypedDict):
+    id: int
+    name: str
+    properties: Dict[FCMaterialPropertiesTypes, List[dict]]
 
 
-class FCMaterial(TypedDict):
+class FCMaterial:
     """
     Определяет материал и набор его физических свойств.
     """
     id: int  # Уникальный идентификатор материала
     name: str  # Имя материала
-    properties: FCMaterialProperties  # Словарь, где свойства сгруппированы по типам
+    properties: Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]]  # Словарь, где свойства сгруппированы по типам
 
+    def __init__(self, src_material):
+        self.id = src_material['id']
+        self.name = src_material['name']
+
+        for property_group in src_material['properties']:
+            src_properties = src_material['properties'][property_group]
+    
+            if not property_group in self.properties:
+                self.properties[property_group] = []
+
+            for src_property in src_properties:
+                for i, constants in enumerate(src_property["constants"]):
+
+                    type_code = src_property["type"]
+                    type_name = MATERIAL_PROPERTY_TYPES[property_group][type_code]
+                    const_code = src_property["const_names"][i]
+                    const_name = CONST_NAME_MAP[property_group][const_code]
+
+                    property: FCMaterialProperty = {
+                        "name": const_name,
+                        "data": fdecode(constants, dtype(float64)),
+                        "type": type_name,
+                        "dependency": FCDependency(
+                            src_property["const_types"][i],
+                            src_property["const_dep"][i]
+                        )
+                    }
+
+                    self.properties[property_group].append(property)
+
+
+    def dump(self) -> SrcFCMaterial:
+
+        property_groups:Dict[FCMaterialPropertiesTypes, List[dict]] = {}
+
+        material_src:SrcFCMaterial = {
+            "id": self.id,
+            "name": self.name,
+            "properties": property_groups
+        }
+
+        for property_group in self.properties:
+
+            if not property_group in property_groups:
+                property_groups[property_group] = []
+
+            for material_property in self.properties[property_group]:
+
+                const_types, const_dep = material_property['dependency'].encode()
+
+                src_material_property = {
+                    "const_dep": [const_dep],
+                    "const_dep_size": [len(material_property["data"])],
+                    "const_names": [material_property["name"]],
+                    "const_types": [const_types],
+                    "constants": [fencode(material_property["data"])],
+                    "type": material_property["type"]
+                }
+
+        src_data['materials'].append(material_src)
+
+
+    return material_src

@@ -1,5 +1,9 @@
-from typing import List, Dict, TypedDict
+from typing import List, Dict, TypedDict, Union
 import numpy as np
+from numpy.typing import NDArray
+
+from fc_value import decode, encode
+from fc_dict import FCDict
 
 
 class FCElementType(TypedDict):
@@ -631,7 +635,6 @@ FC_ELEMENT_TYPES: Dict[int, FCElementType] = {
 }
 
 
-
 def split_facet(facet: List[int]) -> List[int]:
     if len(facet) == 3:
         return facet
@@ -691,7 +694,6 @@ def make_structure():
 make_structure()
 
 
-
 class FCElem(TypedDict):
     """
     Определяет один конечный элемент в сетке.
@@ -709,7 +711,7 @@ class FCNode(TypedDict):
     Определяет один узел в конечно-элементной сетке.
     """
     id: int  # Уникальный идентификатор узла
-    xyz: NDArray[float64]  # Numpy массив с 3-мя координатами [x, y, z]
+    xyz: NDArray[np.float64]  # Numpy массив с 3-мя координатами [x, y, z]
 
 
 class FCElems:
@@ -742,7 +744,7 @@ class FCElems:
         elem_blocks = decode(data.get('elem_blocks', ''))
         elem_orders = decode(data.get('elem_orders', ''))
         elem_parent_ids = decode(data.get('elem_parent_ids', ''))
-        elem_types = decode(data.get('elem_types', ''), dtype('int8'))
+        elem_types = decode(data.get('elem_types', ''), np.dtype('int8'))
         elem_ids = decode(data.get('elemids',''))
         elem_nodes = decode(data.get('elems', ''))
 

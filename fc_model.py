@@ -11,54 +11,6 @@ from numpy import ndarray, dtype, int8, int32, int64, float64
 
 
 
-def isBase64(sb):
-    if sb == 'all':
-        return False
-    try:
-        if isinstance(sb, str):
-            sb_bytes = bytes(sb, 'ascii')
-        elif isinstance(sb, bytes):
-            sb_bytes = sb
-        else:
-            raise ValueError("Argument must be string or bytes")
-        return b64encode(b64decode(sb_bytes)) == sb_bytes
-    except (TypeError, binascii.Error):
-        return False
-
-
-def decode(src: str, dtype:dtype = dtype('int32')) -> NDArray:
-    """Декодирует строку base64 в numpy массив с заданным типом данных."""
-    if src == '':
-        return np.array([], dtype=dtype) # type: ignore
-    return np.frombuffer(b64decode(src), dtype) # type: ignore
-
-
-def fdecode(src: str, dtype:dtype = dtype('int32')) -> Union[NDArray, str]:
-    """
-    "Гибкое" декодирование. Если строка является base64, декодирует ее в numpy массив.
-    В противном случае, возвращает строку как есть (например, для значения 'all').
-    """
-    if src == '':
-        return np.array([], dtype=dtype) # type: ignore
-    if isBase64(src):
-        return decode(src, dtype)
-    return src
-
-
-def encode(data: ndarray) -> str:
-    """Кодирует numpy массив в строку base64."""
-    return b64encode(data.tobytes()).decode()
-
-
-def fencode(data: Union[ndarray,str, int]) -> str:
-    if isinstance(data, str):
-        return data
-    if isinstance(data, int):
-        return str(data)
-    if isinstance(data, ndarray):
-        return encode(data)
-    return ''
-
 
 class FCHeader(TypedDict):
     binary: bool

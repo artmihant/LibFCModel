@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, TypedDict, Union
 from numpy import dtype, float64
 from numpy.typing import NDArray
 
-from fc_code import fdecode, fencode
+from fc_value import FCValue
 
 
 DEPENDENCY_TYPES: Dict[int, str] = {
@@ -27,7 +27,7 @@ DEPENDENCY_TYPES_REVERSE: Dict[str, int] = {v: k for k, v in DEPENDENCY_TYPES.it
 
 class FCDependencyColumn(TypedDict):
     type: str  # Форма задания зависимости - значение из DEPENDENCY_TYPES
-    data: Union[NDArray[float64], str, int]
+    data: FCValue
 
 
 class FCDependency:
@@ -36,7 +36,7 @@ class FCDependency:
     """
     type: int # -1 - таблица, иное число - константа
 
-    const: Union[NDArray[float64], str, int]  # Данные для зависимости (e.g., массив ID узлов)
+    const: FCValue  # Данные для зависимости (e.g., массив ID узлов)
     table: List[FCDependencyColumn]
 
     def __init__(self, deps_types: Union[List[int], int], dep_data: Union[List[str], str]):
@@ -45,22 +45,22 @@ class FCDependency:
     def decode(self, deps_types: Union[List[int], int], dep_data: Union[List[str], str]):
         if isinstance(deps_types, list) and isinstance(dep_data, list):
             self.type = -1
-            self.const = ""
+            self.const = FCValue("", dtype(float64))
             self.table = [{
                 "type": DEPENDENCY_TYPES[deps_type],
-                "data": fdecode(dep_data[j], dtype(float64))
+                "data": FCValue(dep_data[j], dtype(float64))
             } for j, deps_type in enumerate(deps_types)]
         elif isinstance(deps_types, int) and isinstance(dep_data, str):
             self.type = deps_types
-            self.const = fdecode(dep_data, dtype(float64))
-            self.table = []           
+            self.const = FCValue(dep_data, dtype(float64))
+            self.table = []
         else:
             raise ValueError("Invalid dependency data")
 
     def encode(self) -> Tuple[Union[List[int], int], Union[List[str], str]]:
         if self.type == -1:
-            return [DEPENDENCY_TYPES_REVERSE[deps['type']] for deps in self.table], [fencode(deps['data']) for deps in self.table]
+            return [DEPENDENCY_TYPES_REVERSE[deps['type']] for deps in self.table], [deps['data'].dump() for deps in self.table]
         else:
-            return self.type, fencode(self.const)
+            return self.type, self.const.dump()
 
 
