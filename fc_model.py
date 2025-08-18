@@ -9,9 +9,6 @@ from numpy.typing import NDArray
 from numpy import ndarray, dtype, int8, int32, int64, float64
 
 
-
-
-
 class FCHeader(TypedDict):
     binary: bool
     description: str
@@ -38,23 +35,21 @@ class FCBlock(TypedDict):
     # material: NotRequired[FCBlockMaterialSteps]
 
 
-class FCCoordinateSystem(TypedDict):
-    id: int
-    type: str
-    name: str
-    origin: NDArray[float64]
-    dir1: NDArray[float64]
-    dir2: NDArray[float64]
 
-class FCConstraint(TypedDict):
-    id: int
+class FCRestraintAxis(TypedDict):
+    data: Union[NDArray[float64], str]
+    dependency: Union[List[FCDependency], int, str]
+    flag: Union[int, bool]
+
+
+class FCRestraint(TypedDict):
+    apply_to: Union[NDArray[int32], str]
+    apply_dim: int    
+    cs: Optional[int]
     name: str
-    type: int
-    master: NDArray[int32]
-    slave: NDArray[int32]
-    master_dim: int
-    slave_dim: int
-    properties: Dict[str, Any]
+    id: int
+    axes: List[FCRestraintAxis]
+
 
 
 class FCLoadAxis(TypedDict):
@@ -85,6 +80,26 @@ class FCRestraint(TypedDict):
     name: str
     id: int
     axes: List[FCRestraintAxis]
+
+
+class FCCoordinateSystem(TypedDict):
+    id: int
+    type: str
+    name: str
+    origin: NDArray[float64]
+    dir1: NDArray[float64]
+    dir2: NDArray[float64]
+
+
+class FCConstraint(TypedDict):
+    id: int
+    name: str
+    type: int
+    master: NDArray[int32]
+    slave: NDArray[int32]
+    master_dim: int
+    slave_dim: int
+    properties: Dict[str, Any]
 
 
 class FCInitialSetAxis(TypedDict):
@@ -663,84 +678,6 @@ class FCModel:
                     material_src[property_type] = remapped
 
                 src_data['materials'].append(material_src)
-
-
-    def _decode_loads(self, src_data):
-
-        for load_src in src_data.get('loads', []):
-
-            axes: List[FCLoadAxis] = []
-
-            for i, dep_type in enumerate(load_src.get("dependency_type", [])):
-                if dep_type and 'dep_var_num' in load_src:
-                    axes.append({
-                        "data": fdecode(load_src['data'][i], dtype('float64')),
-                        "dependency": decode_dependency(dep_type, load_src['dep_var_num'][i]),
-                    })
-                else:
-                    axes.append({
-                        "data": fdecode(load_src['data'][i], dtype('float64')),
-                        "dependency": dep_type
-                    })
-
-            apply_to = fdecode(load_src['apply_to'], dtype('int32'))
-            if type(apply_to) == str:
-                apply_dim = 0
-            else:
-                apply_to_size = load_src['apply_to_size']
-                assert apply_to_size != 0 and  len(apply_to)%apply_to_size == 0
-                apply_dim = len(apply_to)//apply_to_size
-
-            load: FCLoad = {
-                "id": load_src['id'],
-                "name": load_src['name'],
-                "cs": load_src['cs'] if 'cs' in load_src else 0,
-                "apply_to": apply_to,
-                "apply_dim": apply_dim,
-                "axes": axes,
-                "type": load_src['type'],
-            }
-
-            self.loads.append(load)
-
-
-    def _encode_loads(self, src_data):
-
-        if self.loads:
-            src_data['loads'] = []
-
-            for load in self.loads:
-
-                load_src_data: list = []
-                load_src_dependency_type: list = []
-                load_src_dep_var_num: list = []
-                load_src_dep_var_size: list = []
-
-                load_src = {
-                    'id': load['id'],
-                    'name': load['name'],
-                    'type': load['type'],
-                    'apply_to': fencode(load['apply_to']),
-                    'apply_to_size': len(load['apply_to'])//load['apply_dim'] if load['apply_dim'] else 0,
-                    'data': load_src_data,
-                    'dependency_type': load_src_dependency_type,
-                    'dep_var_num': load_src_dep_var_num,
-                    'dep_var_size': load_src_dep_var_size,
-                }
-
-                if load['cs']:
-                    load_src['cs'] = load['cs']
-
-                for axis in load['axes']:
-                    const_types, const_dep = encode_dependency(axis["dependency"])
- 
-                    load_src_data.append(fencode(axis['data']))
-                    load_src_dependency_type.append(const_types)
-                    load_src_dep_var_num.append(const_dep)
-                    load_src_dep_var_size.append(len(axis['data']) if const_dep else 0)
-
-
-                src_data['loads'].append(load_src)
 
 
     def _decode_restraints(self, src_data):

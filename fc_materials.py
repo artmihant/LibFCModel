@@ -4,11 +4,193 @@ from typing import Dict, List, Literal, TypedDict, Union
 from numpy import dtype, float64
 from numpy.typing import NDArray
 
-from fc_value import DataArray, decode, fdecode, fencode
+from fc_value import FCValue
 from fc_dependency import FCDependency
 
 
-MATERIAL_PROPERTY_TYPES: Dict[str, Dict[int, str]] = {
+MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[int, str]] = {
+    "elasticity": {
+        0: "YOUNG_MODULE",         # HOOK
+        1: "POISSON_RATIO",        # HOOK
+        2: "SHEAR_MODULUS",        # HOOK, MURNAGHAN
+        3: "BULK_MODULUS",         # HOOK, MURNAGHAN
+        4: "MU",                   # BLATZ_KO
+        5: "ALPHA",                # BLATZ_KO
+        6: "BETA",                 # BLATZ_KO
+        7: "LAME_MODULE",          # MURNAGHAN
+        8: "C3",                   # MURNAGHAN
+        9: "C4",                   # MURNAGHAN
+        10: "C5",                  # MURNAGHAN
+        16: "E_T",                 # HOOK_TRANSVERSAL_ISOTROPIC
+        17: "E_L",                 # HOOK_TRANSVERSAL_ISOTROPIC
+        18: "PR_T",                # HOOK_TRANSVERSAL_ISOTROPIC
+        19: "PR_TL",               # HOOK_TRANSVERSAL_ISOTROPIC
+        20: "G_TL",                # HOOK_TRANSVERSAL_ISOTROPIC
+        21: "G12",                 # HOOK_ORTHOTROPIC
+        22: "G23",                 # HOOK_ORTHOTROPIC
+        23: "G13",                 # HOOK_ORTHOTROPIC
+        24: "PRXY",                # HOOK_ORTHOTROPIC
+        25: "PRYZ",                # HOOK_ORTHOTROPIC
+        26: "PRXZ",                # HOOK_ORTHOTROPIC
+        27: "C1",                  # COMPR_MOONEY
+        28: "C2",                  # COMPR_MOONEY
+        29: "D",                   # COMPR_MOONEY
+        82: "C_1111",              # ANISOTROPIC
+        83: "C_1112",              # ANISOTROPIC
+        84: "C_1113",              # ANISOTROPIC
+        85: "C_1122",              # ANISOTROPIC
+        86: "C_1123",              # ANISOTROPIC
+        87: "C_1133",              # ANISOTROPIC
+        88: "C_1212",              # ANISOTROPIC
+        89: "C_1213",              # ANISOTROPIC
+        90: "C_1222",              # ANISOTROPIC
+        91: "C_1223",              # ANISOTROPIC
+        92: "C_1233",              # ANISOTROPIC
+        93: "C_1313",              # ANISOTROPIC
+        94: "C_1322",              # ANISOTROPIC
+        95: "C_1323",              # ANISOTROPIC
+        96: "C_1333",              # ANISOTROPIC
+        97: "C_2222",              # ANISOTROPIC
+        98: "C_2223",              # ANISOTROPIC
+        99: "C_2233",              # ANISOTROPIC
+        100: "C_2323",             # ANISOTROPIC
+        101: "C_2333",             # ANISOTROPIC
+        102: "C_3333",             # ANISOTROPIC
+    },
+    "common": {
+        0: "DENSITY",                        # USUAL
+        1: "STRUCTURAL_DAMPING_RATIO",       # USUAL
+        2: "MASS_DAMPING_RATIO",             # USUAL
+        3: "STIFFNESS_DAMPING_RATIO",        # USUAL
+    },
+    "thermal": {
+        0: "COEF_LIN_EXPANSION",             # ISOTROPIC
+        1: "COEF_THERMAL_CONDUCTIVITY",      # ISOTROPIC
+        5: "COEF_THERMAL_CONDUCTIVITY_XX",   # ORTHOTROPIC
+        9: "COEF_THERMAL_CONDUCTIVITY_YY",   # ORTHOTROPIC
+        13: "COEF_THERMAL_CONDUCTIVITY_ZZ",  # ORTHOTROPIC
+        14: "COEF_LIN_EXPANSION_X",          # ORTHOTROPIC
+        15: "COEF_LIN_EXPANSION_Y",          # ORTHOTROPIC
+        16: "COEF_LIN_EXPANSION_Z",          # ORTHOTROPIC
+        17: "COEF_THERMAL_CONDUCTIVITY_T",   # TRANSVERSAL_ISOTROPIC
+        18: "COEF_THERMAL_CONDUCTIVITY_L",   # TRANSVERSAL_ISOTROPIC
+        19: "COEF_LIN_EXPANSION_T",          # TRANSVERSAL_ISOTROPIC
+        20: "COEF_LIN_EXPANSION_L",          # TRANSVERSAL_ISOTROPIC
+    },
+    "geomechanic": {
+        0: "PERMEABILITY",                   # BIOT_ISOTROPIC
+        1: "FLUID_VISCOSITY",               # ISOTROPIC
+        2: "POROSITY",                      # ISOTROPIC
+        3: "FLUID_BULK_MODULUS",            # ISOTROPIC
+        4: "SOLID_BULK_MODULUS",            # ISOTROPIC
+        5: "BIOT_ALPHA",                    # BIOT_ISOTROPIC
+        6: "PERMEABILITY_XX",               # BIOT_ORTHOTROPIC
+        7: "PERMEABILITY_XY",               # BIOT_ORTHOTROPIC
+        8: "PERMEABILITY_XZ",               # BIOT_ORTHOTROPIC
+        9: "PERMEABILITY_YX",               # BIOT_ORTHOTROPIC
+        10: "PERMEABILITY_YY",              # BIOT_ORTHOTROPIC
+        11: "PERMEABILITY_YZ",              # BIOT_ORTHOTROPIC
+        12: "PERMEABILITY_ZX",              # BIOT_ORTHOTROPIC
+        13: "PERMEABILITY_ZY",              # BIOT_ORTHOTROPIC
+        14: "PERMEABILITY_ZZ",              # BIOT_ORTHOTROPIC
+        15: "PERMEABILITY_T",               # BIOT_TRANSVERSAL_ISOTROPIC
+        16: "PERMEABILITY_TT",              # BIOT_TRANSVERSAL_ISOTROPIC
+        17: "PERMEABILITY_TL",              # BIOT_TRANSVERSAL_ISOTROPIC
+        18: "PERMEABILITY_L",               # BIOT_TRANSVERSAL_ISOTROPIC
+        19: "FLUID_DENSITY",                # ISOTROPIC
+        20: "BIOT_MODULUS",                 # ISOTROPIC
+        21: "BIOT_ALPHA_X",                 # BIOT_ORTHOTROPIC
+        22: "BIOT_ALPHA_Y",                 # BIOT_ORTHOTROPIC
+        23: "BIOT_ALPHA_Z",                 # BIOT_ORTHOTROPIC
+        24: "BIOT_ALPHA_T",                 # BIOT_TRANSVERSAL_ISOTROPIC
+        25: "BIOT_ALPHA_L",                 # BIOT_TRANSVERSAL_ISOTROPIC
+    },
+    "plasticity": {
+        0: "YIELD_STRENGTH",                 # MISES
+        5: "YIELD_STRENGTH_COMPR",           # DRUCKER_PRAGER, MOHR_COULOMB
+        7: "COHESION",                       # DRUCKER_PRAGER, MOHR_COULOMB
+        8: "INTERNAL_FRICTION_ANGLE",        # DRUCKER_PRAGER, MOHR_COULOMB
+        9: "DILATANCY_ANGLE",                # MOHR_COULOMB
+        21: "DPC_A",                         # DRUCKER_PRAGER_CREEP
+        22: "DPC_N",                         # DRUCKER_PRAGER_CREEP
+        23: "DPC_M",                         # DRUCKER_PRAGER_CREEP
+    },
+    "hardening": {
+        1: "TENSILE_STRAIN",                # LINEAR
+        2: "E_TAN",                         # LINEAR
+        3: "HARDENING",                     # MULTILINEAR
+        6: "TENSILE_STRAIN_COMPR",          # LINEAR
+        10: "E_TAN_COMPR",                  # LINEAR
+        11: "HARDENING_COMPR",              # MULTILINEAR
+        41: "HARDENING_COHES",              # MULTILINEAR
+    },
+    "creep": {
+        38: "C1",                           # NORTON
+        39: "C2",                           # NORTON
+        40: "C3",                           # NORTON
+    },
+    "preload": {
+        0: "STRESS_XX",                     # INITIAL
+        1: "STRESS_YY",                     # INITIAL
+        2: "STRESS_ZZ",                     # INITIAL
+        3: "STRESS_XY",                     # INITIAL
+        4: "STRESS_YZ",                     # INITIAL
+        5: "STRESS_XZ",                     # INITIAL
+        6: "STRAIN_XX",                     # INITIAL
+        7: "STRAIN_YY",                     # INITIAL
+        8: "STRAIN_ZZ",                     # INITIAL
+        9: "STRAIN_XY",                     # INITIAL
+        10: "STRAIN_YZ",                    # INITIAL
+        11: "STRAIN_XZ",                    # INITIAL
+        12: "PSI_XX",                       # INITIAL
+        13: "PSI_YY",                       # INITIAL
+        14: "PSI_ZZ",                       # INITIAL
+        15: "PSI_XY",                       # INITIAL
+        16: "PSI_YZ",                       # INITIAL
+        17: "PSI_XZ",                       # INITIAL
+        18: "PSI_YX",                       # INITIAL
+        19: "PSI_ZY",                       # INITIAL
+        20: "PSI_ZX",                       # INITIAL
+        21: "GRADIENT_XX",                  # INITIAL
+        22: "GRADIENT_YY",                  # INITIAL
+        23: "GRADIENT_ZZ",                  # INITIAL
+        24: "GRADIENT_XY",                  # INITIAL
+        25: "GRADIENT_YZ",                  # INITIAL
+        26: "GRADIENT_XZ",                  # INITIAL
+        27: "GRADIENT_YX",                  # INITIAL
+        28: "GRADIENT_ZY",                  # INITIAL
+        29: "GRADIENT_ZX",                  # INITIAL
+        30: "PLASTIC_STRAIN_XX",            # INITIAL
+        31: "PLASTIC_STRAIN_YY",            # INITIAL
+        32: "PLASTIC_STRAIN_ZZ",            # INITIAL
+        33: "PLASTIC_STRAIN_XY",            # INITIAL
+        34: "PLASTIC_STRAIN_YZ",            # INITIAL
+        35: "PLASTIC_STRAIN_XZ",            # INITIAL
+        36: "FINGER_STRAIN_XX",             # INITIAL
+        37: "FINGER_STRAIN_YY",             # INITIAL
+        38: "FINGER_STRAIN_ZZ",             # INITIAL
+        39: "FINGER_STRAIN_XY",             # INITIAL
+        40: "FINGER_STRAIN_YZ",             # INITIAL
+        41: "FINGER_STRAIN_XZ",             # INITIAL
+        42: "PLASTIC_STRAIN_MISES",         # INITIAL
+        43: "THERMAL_STRESS_XX",            # INITIAL
+        44: "THERMAL_STRESS_YY",            # INITIAL
+        45: "THERMAL_STRESS_ZZ",            # INITIAL
+        46: "THERMAL_STRESS_XY",            # INITIAL
+        47: "THERMAL_STRESS_YZ",            # INITIAL
+        48: "THERMAL_STRESS_XZ",            # INITIAL
+    },
+    "strength": {
+        0: "TENSILE_STRENGTH",              # ISOTROPIC
+        1: "TENSILE_STRENGTH_COMPR",        # ISOTROPIC
+    },
+}
+
+MATERIAL_PROPERTY_NAMES_CODES: Dict[str, Dict[str, int]] = {
+    group: {key: code for code, key in mapping.items()} for group, mapping in MATERIAL_PROPERTY_NAMES_KEYS.items()
+}
+
+MATERIAL_PROPERTY_TYPES_KEYS: Dict[str, Dict[int, str]] = {
     "elasticity": {
         0: "HOOK",
         1: "HOOK_ORTHOTROPIC",
@@ -33,144 +215,39 @@ MATERIAL_PROPERTY_TYPES: Dict[str, Dict[int, str]] = {
     "strength": {0: "ISOTROPIC"},
 }
 
-MATERIAL_PROPERTY_TYPES_REVERSE: Dict[str, Dict[str, int]] = {
-    group: {name: code for code, name in mapping.items()} for group, mapping in MATERIAL_PROPERTY_TYPES.items()
+MATERIAL_PROPERTY_TYPES_CODES: Dict[str, Dict[str, int]] = {
+    group: {name: code for code, name in mapping.items()} for group, mapping in MATERIAL_PROPERTY_TYPES_KEYS.items()
 }
 
 
-# Constant (const_names) codes per group
-CONST_NAME_MAP: Dict[str, Dict[int, str]] = {
-    "elasticity": {
-        0: "YOUNG_MODULE",
-        1: "POISSON_RATIO",
-        2: "SHEAR_MODULUS",
-        3: "BULK_MODULUS",
-        4: "MU",
-        5: "ALPHA",
-        6: "BETA",
-        7: "LAME_MODULE",
-        8: "C3",
-        9: "C4",
-        10: "C5",
-        16: "E_T",
-        17: "E_L",
-        18: "PR_T",
-        19: "PR_TL",
-        20: "G_TL",
-        21: "G12",
-        22: "G23",
-        23: "G13",
-        24: "PRXY",
-        25: "PRYZ",
-        26: "PRXZ",
-        27: "C1",
-        28: "C2",
-        29: "D",
-        82: "C_1111",
-        83: "C_1112",
-        84: "C_1113",
-        85: "C_1122",
-        86: "C_1123",
-        87: "C_1133",
-        88: "C_1212",
-        89: "C_1213",
-        90: "C_1222",
-        91: "C_1223",
-        92: "C_1233",
-        93: "C_1313",
-        94: "C_1322",
-        95: "C_1323",
-        96: "C_1333",
-        97: "C_2222",
-        98: "C_2223",
-        99: "C_2233",
-        100: "C_2323",
-        101: "C_2333",
-        102: "C_3333",
-    },
-    "common": {0: "DENSITY", 1: "STRUCTURAL_DAMPING_RATIO", 2: "MASS_DAMPING_RATIO", 3: "STIFFNESS_DAMPING_RATIO"},
-    "thermal": {
-        0: "COEF_LIN_EXPANSION",
-        1: "COEF_THERMAL_CONDUCTIVITY",
-        5: "COEF_THERMAL_CONDUCTIVITY_XX",
-        9: "COEF_THERMAL_CONDUCTIVITY_YY",
-        13: "COEF_THERMAL_CONDUCTIVITY_ZZ",
-        14: "COEF_LIN_EXPANSION_X",
-        15: "COEF_LIN_EXPANSION_Y",
-        16: "COEF_LIN_EXPANSION_Z",
-        17: "COEF_THERMAL_CONDUCTIVITY_T",
-        18: "COEF_THERMAL_CONDUCTIVITY_L",
-        19: "COEF_LIN_EXPANSION_T",
-        20: "COEF_LIN_EXPANSION_L",
-    },
-    "geomechanic": {
-        1: "FLUID_VISCOSITY",
-        2: "POROSITY",
-        3: "FLUID_BULK_MODULUS",
-        4: "SOLID_BULK_MODULUS",
-        19: "FLUID_DENSITY",
-        20: "BIOT_MODULUS",
-        0: "PERMEABILITY",
-        5: "BIOT_ALPHA",
-        6: "PERMEABILITY_XX",
-        7: "PERMEABILITY_XY",
-        8: "PERMEABILITY_XZ",
-        9: "PERMEABILITY_YX",
-        10: "PERMEABILITY_YY",
-        11: "PERMEABILITY_YZ",
-        12: "PERMEABILITY_ZX",
-        13: "PERMEABILITY_ZY",
-        14: "PERMEABILITY_ZZ",
-        21: "BIOT_ALPHA_X",
-        22: "BIOT_ALPHA_Y",
-        23: "BIOT_ALPHA_Z",
-        15: "PERMEABILITY_T",
-        16: "PERMEABILITY_TT",
-        17: "PERMEABILITY_TL",
-        18: "PERMEABILITY_L",
-        24: "BIOT_ALPHA_T",
-        25: "BIOT_ALPHA_L",
-    },
-    "plasticity": {
-        0: "YIELD_STRENGTH",
-        5: "YIELD_STRENGTH_COMPR",
-        7: "COHESION",
-        8: "INTERNAL_FRICTION_ANGLE",
-        9: "DILATANCY_ANGLE",
-        21: "DPC_A",
-        22: "DPC_N",
-        23: "DPC_M",
-    },
-    "hardening": {
-        2: "E_TAN",
-        10: "E_TAN_COMPR",
-        1: "TENSILE_STRAIN",
-        6: "TENSILE_STRAIN_COMPR",
-        0: "COMPRESSIVE_STRAIN",
-        7: "COMPRESSIVE_STRAIN_COMPR",
-        8: "STRESS",
-        3: "MULTILINEAR_STRESS",
-        9: "HARDENING",
-        4: "HARDENING_COMPR",
-        5: "PLASTIC_STRAIN",
-        11: "PLASTIC_STRAIN_COMPR",
-        12: "TABULAR_MODE_ID",
-    },
-}
-
-CONST_NAME_REVERSE: Dict[str, Dict[str, int]] = {
-    group: {name: code for code, name in mapping.items()} for group, mapping in CONST_NAME_MAP.items()
-}
-
-
-class FCMaterialProperty(TypedDict):
+class FCMaterialProperty:
     """
     Определяет одно физическое свойство материала (e.g., плотность, модуль Юнга).
     """
-    type: str  # Дополнительный ID типа свойства (обычно 0, но не всегда)
-    name: str  # ID типа свойства (например, 0 - для плотности, если FCMaterialProperty относится к common)
-    data: DataArray  # Значение свойства (константа или массив для зависимостей)
+    type: str  # Берется из MATERIAL_PROPERTY_TYPES
+    name: str  # Берется из CONST_NAME_MAP
+    value: FCValue  # Значение свойства (константа или массив для зависимостей)
     dependency: FCDependency  # Описание зависимости свойства
+
+    def __init__(
+        self,
+        type: str,
+        name: str,
+        value: FCValue,
+        dependency: FCDependency
+    ):
+        """
+        Инициализация свойства материала.
+
+        :param type: Тип свойства (строка, например "HOOK")
+        :param name: Имя свойства (строка, например "YOUNG_MODULE")
+        :param value: Значение свойства (FCValue)
+        :param dependency: Зависимость свойства (FCDependency)
+        """
+        self.type = type
+        self.name = name
+        self.value = value
+        self.dependency = dependency
 
 
 FCMaterialPropertiesTypes = Literal[
@@ -199,7 +276,7 @@ class FCMaterial:
     name: str  # Имя материала
     properties: Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]]  # Словарь, где свойства сгруппированы по типам
 
-    def __init__(self, src_material):
+    def __init__(self, src_material:SrcFCMaterial):
         self.id = src_material['id']
         self.name = src_material['name']
 
@@ -213,52 +290,58 @@ class FCMaterial:
                 for i, constants in enumerate(src_property["constants"]):
 
                     type_code = src_property["type"]
-                    type_name = MATERIAL_PROPERTY_TYPES[property_group][type_code]
-                    const_code = src_property["const_names"][i]
-                    const_name = CONST_NAME_MAP[property_group][const_code]
+                    type_key = MATERIAL_PROPERTY_TYPES_KEYS[property_group][type_code]
+                    name_code = src_property["const_names"][i]
+                    name_key = MATERIAL_PROPERTY_NAMES_KEYS[property_group][name_code]
 
-                    property: FCMaterialProperty = {
-                        "name": const_name,
-                        "data": fdecode(constants, dtype(float64)),
-                        "type": type_name,
-                        "dependency": FCDependency(
+                    property = FCMaterialProperty(
+                        name=name_key,
+                        type=type_key,
+                        value=FCValue(constants, dtype(float64)),
+                        dependency=FCDependency(
                             src_property["const_types"][i],
                             src_property["const_dep"][i]
                         )
-                    }
+                    )
 
                     self.properties[property_group].append(property)
 
 
     def dump(self) -> SrcFCMaterial:
 
-        property_groups:Dict[FCMaterialPropertiesTypes, List[dict]] = {}
-
-        material_src:SrcFCMaterial = {
+        material_src: SrcFCMaterial = {
             "id": self.id,
             "name": self.name,
-            "properties": property_groups
+            "properties": {}
         }
+
+        property_groups = material_src['properties']
 
         for property_group in self.properties:
 
             if not property_group in property_groups:
                 property_groups[property_group] = []
 
-            for material_property in self.properties[property_group]:
+            for property in self.properties[property_group]:
 
-                const_types, const_dep = material_property['dependency'].encode()
+                const_types, const_dep = property.dependency.dump()
+
+                type_key = property.type
+                type_code = MATERIAL_PROPERTY_TYPES_CODES[property_group][type_key]
+                name_key = property.name
+                name_code = MATERIAL_PROPERTY_NAMES_CODES[property_group][name_key]
 
                 src_material_property = {
                     "const_dep": [const_dep],
-                    "const_dep_size": [len(material_property["data"])],
-                    "const_names": [material_property["name"]],
+                    "const_dep_size": [len(property.dependency)],
+                    "const_names": [name_code],
                     "const_types": [const_types],
-                    "constants": [fencode(material_property["data"])],
-                    "type": material_property["type"]
+                    "constants": [property.value.dump()],
+                    "type": type_code
                 }
 
-        src_data['materials'].append(material_src)
+                property_groups[property_group].append(src_material_property)
 
+                # TODO: Добавить слияние свойств
 
-    return material_src
+        return material_src

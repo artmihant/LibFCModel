@@ -22,13 +22,16 @@ DEPENDENCY_TYPES: Dict[int, str] = {
     12: "TABULAR_MODE_ID",
 }
 
-DEPENDENCY_TYPES_REVERSE: Dict[str, int] = {v: k for k, v in DEPENDENCY_TYPES.items()}
+DEPENDENCY_TYPES_R: Dict[str, int] = {v: k for k, v in DEPENDENCY_TYPES.items()}
 
 
-class FCDependencyColumn(TypedDict):
+class FCDependencyColumn:
     type: str  # Форма задания зависимости - значение из DEPENDENCY_TYPES
-    data: FCValue
+    value: FCValue
 
+    def __init__(self, type: str, value: FCValue):
+        self.type = type
+        self.value = value
 
 class FCDependency:
     """
@@ -36,31 +39,35 @@ class FCDependency:
     """
     type: int # -1 - таблица, иное число - константа
 
-    const: FCValue  # Данные для зависимости (e.g., массив ID узлов)
+    value: FCValue  # Данные для зависимости (e.g., массив ID узлов)
     table: List[FCDependencyColumn]
 
-    def __init__(self, deps_types: Union[List[int], int], dep_data: Union[List[str], str]):
-        self.decode(deps_types, dep_data)
+    def __init__(self, dep_type: Union[List[int], int], dep_data: Union[List[str], str]):
 
-    def decode(self, deps_types: Union[List[int], int], dep_data: Union[List[str], str]):
-        if isinstance(deps_types, list) and isinstance(dep_data, list):
+        if isinstance(dep_type, list) and isinstance(dep_data, list):
             self.type = -1
-            self.const = FCValue("", dtype(float64))
-            self.table = [{
-                "type": DEPENDENCY_TYPES[deps_type],
-                "data": FCValue(dep_data[j], dtype(float64))
-            } for j, deps_type in enumerate(deps_types)]
-        elif isinstance(deps_types, int) and isinstance(dep_data, str):
-            self.type = deps_types
-            self.const = FCValue(dep_data, dtype(float64))
+            self.value = FCValue("", dtype(float64))
+            self.table = [FCDependencyColumn(
+                type = DEPENDENCY_TYPES[deps_type],
+                value = FCValue(dep_data[j], dtype(float64))
+            ) for j, deps_type in enumerate(dep_type)]
+
+        elif isinstance(dep_type, int) and isinstance(dep_data, str):
+            self.type = dep_type
+            self.value = FCValue(dep_data, dtype(float64))
             self.table = []
+
         else:
             raise ValueError("Invalid dependency data")
 
-    def encode(self) -> Tuple[Union[List[int], int], Union[List[str], str]]:
+    def dump(self) -> Tuple[Union[List[int], int], Union[List[str], str]]:
         if self.type == -1:
-            return [DEPENDENCY_TYPES_REVERSE[deps['type']] for deps in self.table], [deps['data'].dump() for deps in self.table]
+            return [DEPENDENCY_TYPES_R[deps.type] for deps in self.table], [deps.value.dump() for deps in self.table]
         else:
-            return self.type, self.const.dump()
+            return self.type, self.value.dump()
 
+    def __len__(self):
+        if not len(self.table):
+            return 0
+        return len(self.table[0].value)
 
