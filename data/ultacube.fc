@@ -740,16 +740,16 @@
          "cs" : 1,
          "data" : 
          [
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA="
+            "exponent(1, 0, time)",
+            "exponent(1, 0, time)",
+            "exponent(1, 0, time)",
+            "exponent(1, 0, time)",
+            "exponent(1, 0, time)",
+            "exponent(1, 0, time)"
          ],
          "dep_var_num" : [ "", "", "", "", "", "" ],
          "dep_var_size" : [ 0, 0, 0, 0, 0, 0 ],
-         "dependency_type" : [ 0, 0, 0, 0, 0, 0 ],
+         "dependency_type" : [ 6, 6, 6, 6, 6, 6 ],
          "flag" : [ 1, 1, 1, 1, 1, 1 ],
          "id" : 1,
          "name" : ""
@@ -796,16 +796,16 @@
          "cs" : 1,
          "data" : 
          [
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA=",
-            "AAAAAAAAAAA="
+            "delta(1.0, time, 0.0)",
+            "delta(1.0, time, 0.0)",
+            "delta(1.0, time, 0.0)",
+            "delta(1.0, time, 0.0)",
+            "delta(1.0, time, 0.0)",
+            "delta(1.0, time, 0.0)"
          ],
          "dep_var_num" : [ "", "", "", "", "", "" ],
          "dep_var_size" : [ 0, 0, 0, 0, 0, 0 ],
-         "dependency_type" : [ 0, 0, 0, 0, 0, 0 ],
+         "dependency_type" : [ 6, 6, 6, 6, 6, 6 ],
          "flag" : [ 1, 1, 1, 1, 1, 1 ],
          "id" : 3,
          "name" : ""
@@ -816,16 +816,16 @@
          "cs" : 1,
          "data" : 
          [
-            "AAAAAACAQkA=",
-            "AAAAAACAQkA=",
-            "AAAAAACAQkA=",
+            "tan(x)",
+            "tan(x)",
+            "tan(x)",
             "AAAAAAAAAAA=",
             "AAAAAAAAAAA=",
             "AAAAAAAAAAA="
          ],
          "dep_var_num" : [ "", "", "", "", "", "" ],
          "dep_var_size" : [ 0, 0, 0, 0, 0, 0 ],
-         "dependency_type" : [ 0, 0, 0, 0, 0, 0 ],
+         "dependency_type" : [ 6, 6, 6, 0, 0, 0 ],
          "flag" : [ 1, 1, 1, 0, 0, 0 ],
          "id" : 4,
          "name" : ""

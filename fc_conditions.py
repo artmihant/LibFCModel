@@ -1,3 +1,4 @@
+from sys import flags
 from typing import Dict, Union
 from typing import List, Optional, TypedDict
 from numpy import dtype
@@ -75,7 +76,6 @@ RESTRAINT_FLAGS_KEYS = {
 }
 
 
-
 class FCConditionAxis:
     data: FCValue
     dependency: FCDependency
@@ -103,8 +103,46 @@ class SrcFCLoadStrict(TypedDict):
     name: str
     type: int
 
+
 class SrcFCLoad(SrcFCLoadStrict, total=False):
     cs: int
+
+
+class SrcFCRestrainStrict(TypedDict):
+    apply_to: str
+    apply_to_size: int
+    data: List[str]
+    dep_var_num: list
+    dep_var_size: list
+    dependency_type: list
+    id: int
+    name: str
+    type: int
+
+
+class SrcFCInitialSet(SrcFCRestrainStrict, total=False):
+    apply_to: str
+    apply_to_size: int
+    cs: Optional[int]
+    data: List[str]
+    dep_var_num: List[str]
+    dep_var_size: List[int] 
+    dependency_type: List[int]
+    flag: List[int]
+    id: int
+    type: int
+
+
+
+class SrcFCRestrain(SrcFCRestrainStrict, total=False):
+
+
+
+class FCInitialSetAxis(TypedDict):
+    data: Union[NDArray[float64], str]
+    dependency: Union[List[FCDependency], int, str]
+    flag: Union[int, bool]
+
 
 
 class FCLoad:
@@ -193,8 +231,10 @@ class FCRestraint:
             axes.append(FCConditionAxis(
                 data = FCValue(src_load['data'][i], dtype('float64')),
                 dependency = FCDependency(dep_type, src_load.get('dep_var_num', {i:""})[i]),
+                flag=RESTRAINT_FLAGS_KEYS[src_load['flag'][i]]
             ))
-            
+
+
     # TODO добавить флаги
     def dump(self) -> SrcFCLoad:
 

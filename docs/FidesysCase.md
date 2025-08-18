@@ -850,7 +850,7 @@ strength
                                // Пример. "flag": [15, 15, 0]
 ```
 
-### initial\_sets
+### initial_sets
 
 ```
 [
@@ -886,7 +886,7 @@ strength
 4 = PorePressure
 ```
 
-### contact\_constraints
+### contact_constraints
 
 ```
 [
@@ -914,7 +914,7 @@ strength
 ]
 ```
 
-### coupling\_constraints
+### coupling_constraints
 
 ```
 [
@@ -954,7 +954,7 @@ strength
 5 = INTERPOLATION     // Интерполяционная связь (RBE3)
 ```
 
-### periodic\_constraints
+### periodic_constraints
 
 ```
 [

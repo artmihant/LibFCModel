@@ -5,7 +5,7 @@ from numpy import dtype, float64
 from numpy.typing import NDArray
 
 from fc_value import FCValue
-from fc_dependency import FCDependency
+from fc_data import FCData
 
 
 MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[int, str]] = {
@@ -227,27 +227,24 @@ class FCMaterialProperty:
     type: str  # Берется из MATERIAL_PROPERTY_TYPES
     name: str  # Берется из CONST_NAME_MAP
     value: FCValue  # Значение свойства (константа или массив для зависимостей)
-    dependency: FCDependency  # Описание зависимости свойства
+    data: FCData  # Описание зависимости свойства
 
     def __init__(
         self,
         type: str,
         name: str,
-        value: FCValue,
-        dependency: FCDependency
+        data: FCData
     ):
         """
         Инициализация свойства материала.
 
         :param type: Тип свойства (строка, например "HOOK")
         :param name: Имя свойства (строка, например "YOUNG_MODULE")
-        :param value: Значение свойства (FCValue)
-        :param dependency: Зависимость свойства (FCDependency)
+        :param data: Значение свойства (FCData)
         """
         self.type = type
         self.name = name
-        self.value = value
-        self.dependency = dependency
+        self.value = data
 
 
 FCMaterialPropertiesTypes = Literal[
@@ -297,8 +294,8 @@ class FCMaterial:
                     property = FCMaterialProperty(
                         name=name_key,
                         type=type_key,
-                        value=FCValue(constants, dtype(float64)),
                         dependency=FCDependency(
+                            constants, 
                             src_property["const_types"][i],
                             src_property["const_dep"][i]
                         )
