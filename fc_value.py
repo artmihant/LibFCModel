@@ -34,28 +34,33 @@ def encode(data: np.ndarray) -> str:
     return b64encode(data.tobytes()).decode()
 
 
+
 class FCValue:
 
     type: Literal['formula', 'array', 'null'] = 'null'
     data: Union[np.ndarray, str]
 
-    def __init__(self, data_str: str, size: int, dtype:np.dtype = np.dtype('int32')):
+    def __init__(self, src_data: str, size: int, dtype:np.dtype = np.dtype('int32')):
 
-        if data_str == '':
+        if src_data == '':
             self.data = np.array([], dtype=dtype)
             self.type = 'null'
-        if isBase64(data_str):
-            self.data = decode(data_str, dtype).reshape(size, -1)
+        if isBase64(src_data):
+            self.data = decode(src_data, dtype).reshape(size, -1)
             self.type = 'array'
         else:
-            self.data = data_str
+            self.data = src_data
             self.type = 'formula'
 
-    def dump(self) -> Tuple[str, int]:
+    def resize(self, size: int):
+        if isinstance(self.data, np.ndarray) and size > 0 and self.data.size % size == 0:
+            self.data = self.data.reshape(size, -1)
+
+    def dump(self) -> str:
         if isinstance(self.data, np.ndarray):
-            return encode(self.data), len(self.data)
+            return encode(self.data)
         else:
-            return self.data, 0
+            return self.data
 
     def __len__(self):
         if self.type == 'array':

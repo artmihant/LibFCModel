@@ -135,8 +135,7 @@ class FCLoad:
 
         self.cs_id = src_load.get('cs', 0)
 
-        self.apply = FCValue(src_load['apply_to'], dtype('int32'))
-        self.apply.resize(src_load.get('apply_to_size', 0))
+        self.apply = FCValue(src_load['apply_to'], src_load['apply_to_size'], dtype('int32'))
         self.type = LOADS_TYPES_KEYS[src_load['type']]
         self.data: List[FCData] = []
 
@@ -150,12 +149,14 @@ class FCLoad:
 
     def dump(self) -> SrcFCLoad:
 
+        apply_to, apply_to_size = self.apply.dump()
+
         load_src: SrcFCLoad = {
             'id': self.id,
             'name': self.name,
             'type': LOADS_TYPES_CODES[self.type],
-            'apply_to': self.apply.dump(),
-            'apply_to_size': len(self.apply),
+            'apply_to': apply_to,
+            'apply_to_size': apply_to_size,
             'data': [],
             'dependency_type': [],
             'dep_var_num': [],
@@ -191,8 +192,7 @@ class FCRestraint:
         self.name = src_restraint['name']
         self.cs_id = src_restraint.get('cs', 0)
 
-        self.apply = FCValue(src_restraint['apply_to'], dtype('int32'))
-        self.apply.resize(src_restraint.get('apply_to_size', 0))
+        self.apply = FCValue(src_restraint['apply_to'], src_restraint['apply_to_size'], dtype('int32'))
 
         if 'data' in src_restraint:
             for i, data in enumerate(src_restraint["data"]):
@@ -205,11 +205,13 @@ class FCRestraint:
 
     def dump(self) -> SrcFCRestraint:
 
+        apply_to, apply_to_size = self.apply.dump()
+
         src_restraint: SrcFCRestraint = {
             'id': self.id,
             'name': self.name,
-            'apply_to': self.apply.dump(),
-            'apply_to_size': len(self.apply),
+            'apply_to': apply_to,
+            'apply_to_size': apply_to_size,
             'data': [],
             'dependency_type': [],
             'dep_var_num': [],
@@ -245,8 +247,7 @@ class FCInitialSet:
         self.id = src_initial_set['id']
         self.cs_id = src_initial_set.get('cs', 0)
 
-        self.apply = FCValue(src_initial_set['apply_to'], dtype('int32'))
-        self.apply.resize(src_initial_set.get('apply_to_size', 0))
+        self.apply = FCValue(src_initial_set['apply_to'], src_initial_set['apply_to_size'], dtype('int32'))
 
         if 'data' in src_initial_set:
             for i, data in enumerate(src_initial_set["data"]):
@@ -259,12 +260,12 @@ class FCInitialSet:
 
     def dump(self) -> SrcFCInitialSet:
 
-        apply_to, apply_to_size = self.apply.dump(),   
+        apply_to, apply_to_size = self.apply.dump()
 
         src_initial_set: SrcFCInitialSet = {
             'id': self.id,
-            'apply_to': self.apply.dump(),
-            'apply_to_size': len(self.apply),
+            'apply_to': apply_to,
+            'apply_to_size': apply_to_size,
             'data': [],
             'dependency_type': [],
             'dep_var_num': [],
