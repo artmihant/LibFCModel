@@ -4,6 +4,7 @@ from typing import Dict, List, Literal, TypedDict, Union
 from numpy import dtype, float64
 from numpy.typing import NDArray
 
+from fc_dict import RequiredId
 from fc_value import FCValue
 from fc_data import FCData
 
@@ -263,7 +264,7 @@ class SrcFCMaterial(TypedDict):
     properties: Dict[FCMaterialPropertiesTypes, List[dict]]
 
 
-class FCMaterial:
+class FCMaterial(RequiredId):
     """
     Определяет материал и набор его физических свойств.
     """

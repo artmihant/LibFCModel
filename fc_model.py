@@ -9,6 +9,11 @@ from numpy.typing import NDArray
 from numpy import ndarray, dtype, int8, int32, int64, float64
 
 from fc_dict import FCDict
+from fc_elems import FCNode, FCMesh
+from fc_materials import FCMaterial
+from fc_conditions import FCLoad, FCInitialSet, FCRestraint
+from fc_value import decode, encode, FCValue
+
 
 
 class FCHeader(TypedDict):
@@ -21,7 +26,6 @@ class FCHeader(TypedDict):
 # class FCBlockMaterialSteps(TypedDict):
 #     ids: NDArray[int32]
 #     steps: NDArray[int32]
-
 
 class FCBlock(TypedDict):
     """
@@ -117,8 +121,7 @@ class FCModel:
 
     coordinate_systems: FCDict[FCCoordinateSystem]
 
-    nodes: FCDict[FCNode]
-    elems: FCElems
+    mesh: FCMesh
 
     blocks: FCDict[FCBlock]
     property_tables: FCDict[FCPropertyTable]
@@ -156,7 +159,7 @@ class FCModel:
         self.coordinate_systems = FCDict()
 
         self.nodes = FCDict()
-        self.elems = FCElems()
+        self.elems = FCMesh()
 
         self.blocks = FCDict()
         self.property_tables = FCDict()
@@ -269,6 +272,7 @@ class FCModel:
                 "name": cs['name'],
                 "type": cs['type']
             }
+
 
     def _encode_coordinate_systems(self, output_data):
 
@@ -434,7 +438,6 @@ class FCModel:
                 }
 
 
-
     def _encode_sets(self,  src_data):
 
         if not (self.nodesets or self.sidesets):
@@ -460,36 +463,10 @@ class FCModel:
 
 
     def _decode_mesh(self, src_data):
-
-        node_ids = decode(src_data['mesh']['nids'])
-        node_coords = decode(src_data['mesh']['nodes'], dtype('float64')).reshape(-1, 3)
-
-        for i, nid in enumerate(node_ids):
-
-            self.nodes[nid] = {
-                'id': nid,
-                'xyz':node_coords[i]
-            }
-
-        self.elems.decode(src_data['mesh'])
-
+        self.mesh.decode(src_data['mesh'])
 
     def _encode_mesh(self, src_data):
-
-        nodes_count = len(self.nodes)
-        node_ids: NDArray = np.zeros(nodes_count, np.int32)
-        node_xyzs: NDArray = np.zeros((nodes_count,3), np.float64)
-
-        for i, node in enumerate(self.nodes):
-            node_ids[i] = node['id']
-            node_xyzs[i] = node['xyz']
-
-        src_data['mesh'] = {
-            "nodes_count": nodes_count,
-            "nids": encode(node_ids),
-            "nodes": encode(node_xyzs),
-            **self.elems.encode()
-        }
+        src_data['mesh'] = self.mesh.decode()
 
 
     def _decode_settings(self, src_data):
@@ -524,264 +501,41 @@ class FCModel:
     def _decode_materials(self, src_data):
 
         for material_src in src_data.get('materials', []):
-
-            properties: FCMaterialProperties = {}
-
-            for property_name in material_src:
-                properties_src = material_src[property_name]
-
-                if not isinstance(properties_src, list):
-                    continue
-
-                named_properties:list  = []
-
-                properties[property_name] = named_properties
-
-                for property_src in properties_src:
-                    for i, constants in enumerate(property_src["constants"]):
-
-                        type_code = property_src["type"]
-                        type_name = MATERIAL_PROPERTY_TYPES.get(property_name, {}).get(type_code, type_code)
-                        const_code = property_src["const_names"][i]
-                        const_name = CONST_NAME_MAP.get(property_name, {}).get(const_code, const_code)
-
-                        property: FCMaterialProperty = {
-                            "name": const_name,
-                            "data": decode(constants, dtype(float64)),
-                            "type": type_name,
-                            "dependency": decode_dependency(
-                                property_src["const_types"][i],
-                                property_src["const_dep"][i]
-                            )
-                        }
-
-                        named_properties.append(property)
-
-            self.materials[material_src['id']] = {
-                "id": material_src['id'],
-                "name": material_src['name'],
-                "properties": properties
-            }
+            material = FCMaterial(material_src)
+            self.materials[material.id] = material
 
 
     def _encode_materials(self, src_data):
 
         if self.materials:
-
-            src_data['materials'] = []
-
-            for material in self.materials:
-
-                material_src = {
-                    "id": material['id'],
-                    "name": material['name'],
-                }
-
-                for property_type in material["properties"]:
-
-                    property_groups = {}
-
-                    for material_property in material["properties"][property_type]:
-
-                        if not material_property["type"] in property_groups:
-
-                            material_property_group = {
-                                "const_dep": [],
-                                "const_dep_size": [],
-                                "const_names": [],
-                                "const_types": [],
-                                "constants": [],
-                                "type": material_property["type"]
-                            }
-
-                            property_groups[material_property["type"]] = material_property_group
-
-                        const_types, const_dep = encode_dependency(material_property["dependency"])
-
-                        property_groups[material_property["type"]]['const_dep'].append(const_dep)
-                        property_groups[material_property["type"]]['const_dep_size'].append(len(material_property["data"]))
-                        property_groups[material_property["type"]]['const_names'].append(material_property["name"])
-                        property_groups[material_property["type"]]['const_types'].append(const_types)
-                        property_groups[material_property["type"]]['constants'].append(fencode(material_property["data"]))
-                    
-                    remapped = []
-                    for key in property_groups:
-                        group = property_groups[key]
-                        type_code = MATERIAL_PROPERTY_TYPES_REVERSE.get(property_type, {}).get(group['type'] if 'type' in group else key, key)
-                        group_out = dict(group)
-                        group_out['type'] = type_code
-                        # map constant names back to codes
-                        group_out['const_names'] = [
-                            CONST_NAME_REVERSE.get(property_type, {}).get(n, n) for n in group_out['const_names']
-                        ]
-                        remapped.append(group_out)
-                    material_src[property_type] = remapped
-
-                src_data['materials'].append(material_src)
+            src_data['materials'] = [material.dump() for material in self.materials]
 
 
     def _decode_restraints(self, src_data):
 
         for restraint_src in src_data.get('restraints', []):
 
-            axes: List[FCRestraintAxis] = []
-
-            for i, dep_type in enumerate(restraint_src.get("dependency_type", [])):
-                if 'dep_var_num' in restraint_src:
-                    axes.append({
-                        "data": fdecode(restraint_src['data'][i], dtype('float64')),
-                        "dependency": decode_dependency(dep_type, restraint_src['dep_var_num'][i]),
-                        "flag": restraint_src['flag'][i],
-                    })
-
-            apply_to = fdecode(restraint_src['apply_to'], dtype('int32'))
-
-            if type(apply_to) == str:
-                apply_dim = 0
-            else:
-                apply_to_size = restraint_src['apply_to_size']
-                assert apply_to_size != 0 and len(apply_to)%apply_to_size == 0
-                apply_dim = len(apply_to)//apply_to_size
-
-            self.restraints.append({
-                "id": restraint_src['id'],
-                "name": restraint_src['name'],
-                "cs": restraint_src['cs'] if 'cs' in restraint_src else 0,
-                "apply_to": apply_to,
-                "apply_dim": apply_dim,
-                "axes": axes,
-            })
+            restraint = FCRestraint(restraint_src)
+            self.restraints[restraint.id] = restraint
 
 
     def _encode_restraints(self, src_data):
 
         if self.restraints:
-
-            src_data['restraints'] = []
-
-            for restraint in self.restraints:
-
-                restraint_src_data:list = []
-                restraint_src_flag:list = []
-                restraint_src_dependency_type:list = []
-                restraint_src_dep_var_num:list = []
-                restraint_src_dep_var_size:list = []
-
-                restraint_src = {
-                    'id': restraint['id'],
-                    'name': restraint['name'],
-                    'apply_to': fencode(restraint['apply_to']),
-                    'apply_to_size': len(restraint['apply_to'])//restraint['apply_dim'] if restraint['apply_dim'] else 0,
-                    'data': restraint_src_data,
-                    'flag': restraint_src_flag,
-                    'dependency_type': restraint_src_dependency_type,
-                    'dep_var_num': restraint_src_dep_var_num,
-                    'dep_var_size': restraint_src_dep_var_size,
-                }
-
-                if restraint['cs']:
-                    restraint_src['cs'] = restraint['cs']
-
-                for axis in restraint['axes']:
-                    if type(axis) == dict:
-                        const_types, const_dep = encode_dependency(axis["dependency"])
-
-                        restraint_src_data.append(fencode(axis['data']))
-                        restraint_src_flag.append(axis['flag'])
-                        restraint_src_dependency_type.append(const_types)
-                        restraint_src_dep_var_num.append(const_dep)
-                        restraint_src_dep_var_size.append(len(axis['data']) if const_dep else 0)
-
-                    else:
-                        restraint_src_data.append(fencode(axis['data']))
-                        restraint_src_dependency_type.append(0)
-                        restraint_src_dep_var_num.append("")
-                        restraint_src_dep_var_size.append(0)
-                        restraint_src_flag.append(15)
-
-                src_data['restraints'].append(restraint_src)
+            src_data['restraints'] = [restraint.dump() for restraint in self.restraints]
 
 
     def _decode_initial_sets(self, src_data):
 
         for initial_set_src in src_data.get('initial_sets', []):
-
-            axes: List[FCInitialSetAxis] = []
-
-            for i, dep_type in enumerate(initial_set_src.get("dependency_type", [])):
-                if 'dep_var_num' in initial_set_src:
-                    axes.append({
-                        "data": fdecode(initial_set_src['data'][i], dtype('float64')),
-                        "dependency": decode_dependency(dep_type, initial_set_src['dep_var_num'][i]),
-                        "flag": initial_set_src['flag'][i],
-                    })
-
-            apply_to = fdecode(initial_set_src['apply_to'], dtype('int32'))
-
-            if type(apply_to) == str:
-                apply_dim = 0
-            else:
-                apply_to_size = initial_set_src['apply_to_size']
-                assert apply_to_size != 0 and len(apply_to)%apply_to_size == 0
-                apply_dim = len(apply_to)//apply_to_size
-
-            self.initial_sets.append({
-                "id": initial_set_src['id'],
-                "cs": initial_set_src['cs'] if 'cs' in initial_set_src else 0,
-                "apply_to": apply_to,
-                "apply_dim": apply_dim,
-                "axes": axes,
-                "type": initial_set_src['type'],
-            })
+            initial_set = FCInitialSet(initial_set_src)
+            self.initial_sets[initial_set.id] = initial_set
 
 
     def _encode_initial_sets(self, src_data):
 
         if self.initial_sets:
-
-            src_data['initial_sets'] = []
-
-            for initial_set in self.initial_sets:
-
-                initial_set_src_data:list = []
-                initial_set_src_flag:list = []
-                initial_set_src_dependency_type:list = []
-                initial_set_src_dep_var_num:list = []
-                initial_set_src_dep_var_size:list = []
-
-                initial_set_src = {
-                    'id': initial_set['id'],
-                    "type": initial_set['type'],
-                    'apply_to': fencode(initial_set['apply_to']),
-                    'apply_to_size': len(initial_set['apply_to'])//initial_set['apply_dim'] if initial_set['apply_dim'] else 0,
-                    'data': initial_set_src_data,
-                    'flag': initial_set_src_flag,
-                    'dependency_type': initial_set_src_dependency_type,
-                    'dep_var_num': initial_set_src_dep_var_num,
-                    'dep_var_size': initial_set_src_dep_var_size,
-                }
-
-                if initial_set['cs']:
-                    initial_set_src['cs'] = initial_set['cs']
-
-                for axis in initial_set['axes']:
-                    if type(axis) == dict:
-                        const_types, const_dep = encode_dependency(axis["dependency"])
-
-                        initial_set_src_data.append(fencode(axis['data']))
-                        initial_set_src_flag.append(axis['flag'])
-                        initial_set_src_dependency_type.append(const_types)
-                        initial_set_src_dep_var_num.append(const_dep)
-                        initial_set_src_dep_var_size.append(len(axis['data']) if const_dep else 0)
-
-                    else:
-                        initial_set_src_data.append(fencode(axis['data']))
-                        initial_set_src_dependency_type.append(0)
-                        initial_set_src_dep_var_num.append("")
-                        initial_set_src_dep_var_size.append(0)
-                        initial_set_src_flag.append(15)
-
-                src_data['initial_sets'].append(initial_set_src)
+            src_data['initial_sets'] = [initial_set.dump() for initial_set in self.initial_sets]
 
 
     def _decode_receivers(self, src_data):

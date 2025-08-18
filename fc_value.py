@@ -1,6 +1,5 @@
 from base64 import b64decode, b64encode
 import binascii
-from re import L
 from typing import Literal, Union
 
 import numpy as np
@@ -71,3 +70,4 @@ class FCValue:
             return len(self.data)
         else:
             return 0
+

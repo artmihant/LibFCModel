@@ -71,3 +71,64 @@ def compress(self: FCModel):
                             if dep['type'] == 11:
                                 for i, n in enumerate(dep['data']):
                                     dep['data'][i] = nodes_id_map[int(n)]
+
+
+
+
+
+
+def split_facet(facet: List[int]) -> List[int]:
+    if len(facet) == 3:
+        return facet
+    if len(facet) < 3:
+        return []
+    tail = facet[2:]
+    tail.append(facet[1])
+    tris = [facet[-1], facet[0], facet[1]]
+    tris.extend(split_facet(tail))
+    return tris
+
+
+def split_edge(edge: List[int]) -> List[int]:
+    if len(edge) == 2:
+        return edge
+    if len(edge) < 2:
+        return []
+    tail = edge[1:]
+    pairs = [edge[0], edge[1]]
+    pairs.extend(split_edge(tail))
+    return pairs
+
+
+def split_polihedron(tetra: List[int]) -> List[int]:
+    return tetra
+
+
+def make_structure():
+    for eid in FC_ELEMENT_TYPES:
+        element_type = FC_ELEMENT_TYPES[eid]
+        element_type['structure'][0] = np.arange(element_type['nodes'], dtype=np.int32)
+
+        if element_type['dim'] > 0:
+
+            pairs = []
+            for edge in element_type['edges']:
+                pairs.extend(split_edge(edge))
+
+            element_type['structure'][1] = np.array(pairs, dtype=np.int32)
+
+        if element_type['dim'] > 1:
+
+            trangles = []
+            for facet in element_type['facets']:
+                trangles.extend(split_facet(facet))
+
+            element_type['structure'][2] = np.array(trangles, dtype=np.int32)
+
+        if element_type['dim'] > 2:
+
+            tetras = []
+            for tetra in element_type['tetras']:
+                tetras.extend(split_polihedron(tetra))
+
+            element_type['structure'][3] = np.array(tetras, dtype=np.int32)

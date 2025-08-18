@@ -2,7 +2,8 @@
 from typing import Generic, TypeVar, TypedDict, Dict
 
 
-class RequiredId(TypedDict):
+
+class RequiredId:
     id: int
 
 
@@ -34,10 +35,10 @@ class FCDict(Generic[T]):
         return self.data[key]
 
     def __setitem__(self, key:int, item: T):
-        item['id'] = key
-        if self.max_id < item['id']:
-            self.max_id = item['id']
-        self.data[item['id']] = item
+        item.id = key
+        if self.max_id < item.id:
+            self.max_id = item.id
+        self.data[item.id] = item
 
     def __contains__(self, key):
         return key in self.data
@@ -50,11 +51,11 @@ class FCDict(Generic[T]):
         return f'<FCDict: {len(self.data)}>'
 
     def add(self, item: T):
-        if item['id'] in self or item['id'] < 1:
+        if item.id in self or item.id < 1:
             self[self.max_id+1] = item
         else:
-            self[item['id']] = item
-        return item['id']
+            self[item.id] = item
+        return item.id
 
     def __len__(self):
         return len(self.data)
@@ -66,13 +67,13 @@ class FCDict(Generic[T]):
         new_data = {}
         for key in index_map:
             if item := self.data[key]:
-                item['id'] = index_map[key]
+                item.id = index_map[key]
                 new_data[index_map[key]] = item
 
         if len(new_data) > 1:
             self.max_id = max(*new_data.keys())
         elif len(new_data) == 1:
-            self.max_id = new_data[0]['id']
+            self.max_id = new_data[0].id
         else:
             self.max_id = 0
 
