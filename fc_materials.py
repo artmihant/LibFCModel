@@ -226,7 +226,6 @@ class FCMaterialProperty:
     """
     type: str  # Берется из MATERIAL_PROPERTY_TYPES
     name: str  # Берется из CONST_NAME_MAP
-    value: FCValue  # Значение свойства (константа или массив для зависимостей)
     data: FCData  # Описание зависимости свойства
 
     def __init__(
@@ -237,14 +236,13 @@ class FCMaterialProperty:
     ):
         """
         Инициализация свойства материала.
-
         :param type: Тип свойства (строка, например "HOOK")
         :param name: Имя свойства (строка, например "YOUNG_MODULE")
         :param data: Значение свойства (FCData)
         """
         self.type = type
         self.name = name
-        self.value = data
+        self.data = data
 
 
 FCMaterialPropertiesTypes = Literal[
@@ -294,7 +292,7 @@ class FCMaterial:
                     property = FCMaterialProperty(
                         name=name_key,
                         type=type_key,
-                        dependency=FCDependency(
+                        data=FCData(
                             constants, 
                             src_property["const_types"][i],
                             src_property["const_dep"][i]
@@ -321,7 +319,7 @@ class FCMaterial:
 
             for property in self.properties[property_group]:
 
-                const_types, const_dep = property.dependency.dump()
+                constants, const_types, const_dep = property.data.dump()
 
                 type_key = property.type
                 type_code = MATERIAL_PROPERTY_TYPES_CODES[property_group][type_key]
@@ -330,10 +328,10 @@ class FCMaterial:
 
                 src_material_property = {
                     "const_dep": [const_dep],
-                    "const_dep_size": [len(property.dependency)],
+                    "const_dep_size": [len(property.data)],
                     "const_names": [name_code],
                     "const_types": [const_types],
-                    "constants": [property.value.dump()],
+                    "constants": [constants],
                     "type": type_code
                 }
 

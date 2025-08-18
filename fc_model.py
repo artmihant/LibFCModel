@@ -8,6 +8,8 @@ from numpy.typing import NDArray
 
 from numpy import ndarray, dtype, int8, int32, int64, float64
 
+from fc_dict import FCDict
+
 
 class FCHeader(TypedDict):
     binary: bool
@@ -35,53 +37,6 @@ class FCBlock(TypedDict):
     # material: NotRequired[FCBlockMaterialSteps]
 
 
-
-class FCRestraintAxis(TypedDict):
-    data: Union[NDArray[float64], str]
-    dependency: Union[List[FCDependency], int, str]
-    flag: Union[int, bool]
-
-
-class FCRestraint(TypedDict):
-    apply_to: Union[NDArray[int32], str]
-    apply_dim: int    
-    cs: Optional[int]
-    name: str
-    id: int
-    axes: List[FCRestraintAxis]
-
-
-
-class FCLoadAxis(TypedDict):
-    data: Union[NDArray[float64], str]
-    dependency: Union[List[FCDependency], int, str]
-
-
-class FCLoad(TypedDict):
-    apply_to: Union[NDArray[int32], str]
-    apply_dim: int
-    cs: Optional[int]
-    name: str
-    type: int
-    id: int
-    axes: List[FCLoadAxis]
-
-
-class FCRestraintAxis(TypedDict):
-    data: Union[NDArray[float64], str]
-    dependency: Union[List[FCDependency], int, str]
-    flag: Union[int, bool]
-
-
-class FCRestraint(TypedDict):
-    apply_to: Union[NDArray[int32], str]
-    apply_dim: int    
-    cs: Optional[int]
-    name: str
-    id: int
-    axes: List[FCRestraintAxis]
-
-
 class FCCoordinateSystem(TypedDict):
     id: int
     type: str
@@ -100,21 +55,6 @@ class FCConstraint(TypedDict):
     master_dim: int
     slave_dim: int
     properties: Dict[str, Any]
-
-
-class FCInitialSetAxis(TypedDict):
-    data: Union[NDArray[float64], str]
-    dependency: Union[List[FCDependency], int, str]
-    flag: Union[int, bool]
-
-
-class FCInitialSet(TypedDict):
-    apply_to: Union[NDArray[int32], str]
-    apply_dim: int    
-    cs: Optional[int]
-    id: int
-    axes: List[FCInitialSetAxis]
-    type: int
 
 
 class FCSet(TypedDict):

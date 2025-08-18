@@ -301,7 +301,11 @@
          "apply_to_size" : 4,
          "id" : 1,
          "name" : "absorption",
-         "type" : 19
+         "type" : 19,
+         "data" : [],
+         "dep_var_num" : [],
+         "dep_var_size" : [],
+         "dependency_type" : [],
       },
       {
          "apply_to" : "all",

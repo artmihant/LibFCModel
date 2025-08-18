@@ -1,9 +1,9 @@
 from sys import flags
-from typing import Dict, Union
+from typing import Dict, Union, cast
 from typing import List, Optional, TypedDict
 from numpy import dtype
 
-from fc_dependency import FCDependency
+from fc_data import FCData
 from fc_value import FCValue
 
 
@@ -75,74 +75,48 @@ RESTRAINT_FLAGS_KEYS = {
     15: 'VolumeAngularVelocity',    # ГУ по угловым скоростям. Применяется к элементам. Длина массива равна 3.
 }
 
-
-class FCConditionAxis:
-    data: FCValue
-    dependency: FCDependency
-    flag: Union[str, None]
-    def __init__(self, data: FCValue, dependency: FCDependency, flag: Union[str, None] = None):
-        """
-        Инициализация оси применения гранусловия.
-
-        :param data: Значение нагрузки (FCValue)
-        :param dependency: Зависимость (FCDependency)
-        """
-        self.data = data
-        self.dependency = dependency
-        self.flag = flag
-
-
 class SrcFCLoadStrict(TypedDict):
     apply_to: str
     apply_to_size: int
-    data: list
-    dep_var_num: list
-    dep_var_size: list
-    dependency_type: list
-    id: int
     name: str
+    id: int
     type: int
-
+    data: List[str]
+    dep_var_num: List[Union[str, List[str]]]
+    dep_var_size: List[int]
+    dependency_type: List[Union[int, List[int]]]
 
 class SrcFCLoad(SrcFCLoadStrict, total=False):
     cs: int
 
 
-class SrcFCRestrainStrict(TypedDict):
+class SrcFCRestraintStrict(TypedDict):
     apply_to: str
     apply_to_size: int
-    data: List[str]
-    dep_var_num: list
-    dep_var_size: list
-    dependency_type: list
-    id: int
     name: str
-    type: int
+    id: int
+    data: List[str]
+    dep_var_num: List[Union[str, List[str]]]
+    dep_var_size: List[int]
+    dependency_type: List[Union[int, List[int]]]
+    flag: List[int]
+
+class SrcFCRestraint(SrcFCRestraintStrict, total=False):
+    cs: int
 
 
-class SrcFCInitialSet(SrcFCRestrainStrict, total=False):
+class SrcFCInitialSetStrict(TypedDict):
     apply_to: str
     apply_to_size: int
-    cs: Optional[int]
-    data: List[str]
-    dep_var_num: List[str]
-    dep_var_size: List[int] 
-    dependency_type: List[int]
-    flag: List[int]
     id: int
-    type: int
+    data: List[str]
+    dep_var_num: List[Union[str, List[str]]]
+    dep_var_size: List[int]
+    dependency_type: List[Union[int, List[int]]]
+    flag: List[int]
 
-
-
-class SrcFCRestrain(SrcFCRestrainStrict, total=False):
-
-
-
-class FCInitialSetAxis(TypedDict):
-    data: Union[NDArray[float64], str]
-    dependency: Union[List[FCDependency], int, str]
-    flag: Union[int, bool]
-
+class SrcFCInitialSet(SrcFCInitialSetStrict, total=False):
+    cs: int
 
 
 class FCLoad:
@@ -152,33 +126,29 @@ class FCLoad:
 
     apply: FCValue
     cs_id: int
-    axes: List[FCConditionAxis]
+    data: List[FCData]
 
-    def __init__(self, src_load:SrcFCLoad):
+    def __init__(self, src_load: SrcFCLoad):
 
         self.id = src_load['id']
         self.name = src_load['name']
+
         self.cs_id = src_load.get('cs', 0)
 
         self.apply = FCValue(src_load['apply_to'], dtype('int32'))
         self.apply.resize(src_load.get('apply_to_size', 0))
-
         self.type = LOADS_TYPES_KEYS[src_load['type']]
+        self.data: List[FCData] = []
 
-        axes: List[FCConditionAxis] = []
-
-        for i, dep_type in enumerate(src_load.get("dependency_type", [])):
-            axes.append(FCConditionAxis(
-                data = FCValue(src_load['data'][i], dtype('float64')),
-                dependency = FCDependency(dep_type, src_load.get('dep_var_num', {i:""})[i]),
-            ))
+        if 'data' in src_load:
+            for i, data in enumerate(src_load["data"]):
+                self.data.append(FCData(
+                    data,
+                    src_load["dependency_type"][i], 
+                    src_load['dep_var_num'][i]
+                ))
 
     def dump(self) -> SrcFCLoad:
-
-        load_src_data: list = []
-        load_src_dependency_type: list = []
-        load_src_dep_var_num: list = []
-        load_src_dep_var_size: list = []
 
         load_src: SrcFCLoad = {
             'id': self.id,
@@ -186,22 +156,22 @@ class FCLoad:
             'type': LOADS_TYPES_CODES[self.type],
             'apply_to': self.apply.dump(),
             'apply_to_size': len(self.apply),
-            'data': load_src_data,
-            'dependency_type': load_src_dependency_type,
-            'dep_var_num': load_src_dep_var_num,
-            'dep_var_size': load_src_dep_var_size,
+            'data': [],
+            'dependency_type': [],
+            'dep_var_num': [],
+            'dep_var_size': [],
         }
 
         if self.cs_id:
             load_src['cs'] = self.cs_id
 
-        for axis in self.axes:
-            const_types, const_dep = axis.dependency.dump()
+        for data in self.data:
+            src_data, src_types, src_deps = data.dump()
 
-            load_src_data.append(axis.data.dump())
-            load_src_dependency_type.append(const_types)
-            load_src_dep_var_num.append(const_dep)
-            load_src_dep_var_size.append(len(axis.dependency))
+            load_src['data'].append(src_data)
+            load_src['dependency_type'].append(src_types)
+            load_src['dep_var_num'].append(src_deps)
+            load_src['dep_var_size'].append(len(data))
 
         return load_src
 
@@ -212,58 +182,103 @@ class FCRestraint:
 
     apply: FCValue
     cs_id: int
-    axes: List[FCConditionAxis]
+    data: List[FCData]
+    flags: List[str]
 
-    def __init__(self, src_load:SrcFCLoad):
+    def __init__(self, src_restraint:SrcFCRestraint):
 
-        self.id = src_load['id']
-        self.name = src_load['name']
-        self.cs_id = src_load.get('cs', 0)
+        self.id = src_restraint['id']
+        self.name = src_restraint['name']
+        self.cs_id = src_restraint.get('cs', 0)
 
-        self.apply = FCValue(src_load['apply_to'], dtype('int32'))
-        self.apply.resize(src_load.get('apply_to_size', 0))
+        self.apply = FCValue(src_restraint['apply_to'], dtype('int32'))
+        self.apply.resize(src_restraint.get('apply_to_size', 0))
 
-        self.type = LOADS_TYPES_KEYS[src_load['type']]
+        if 'data' in src_restraint:
+            for i, data in enumerate(src_restraint["data"]):
+                self.data.append(FCData(
+                    data,
+                    src_restraint["dependency_type"][i], 
+                    src_restraint['dep_var_num'][i]
+                ))
+        self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in flags]
 
-        axes: List[FCConditionAxis] = []
+    def dump(self) -> SrcFCRestraint:
 
-        for i, dep_type in enumerate(src_load.get("dependency_type", [])):
-            axes.append(FCConditionAxis(
-                data = FCValue(src_load['data'][i], dtype('float64')),
-                dependency = FCDependency(dep_type, src_load.get('dep_var_num', {i:""})[i]),
-                flag=RESTRAINT_FLAGS_KEYS[src_load['flag'][i]]
-            ))
-
-
-    # TODO добавить флаги
-    def dump(self) -> SrcFCLoad:
-
-        load_src_data: list = []
-        load_src_dependency_type: list = []
-        load_src_dep_var_num: list = []
-        load_src_dep_var_size: list = []
-
-        load_src: SrcFCLoad = {
+        src_restraint: SrcFCRestraint = {
             'id': self.id,
             'name': self.name,
-            'type': LOADS_TYPES_CODES[self.type],
             'apply_to': self.apply.dump(),
             'apply_to_size': len(self.apply),
-            'data': load_src_data,
-            'dependency_type': load_src_dependency_type,
-            'dep_var_num': load_src_dep_var_num,
-            'dep_var_size': load_src_dep_var_size,
+            'data': [],
+            'dependency_type': [],
+            'dep_var_num': [],
+            'dep_var_size': [],
+            'flag': []
         }
 
         if self.cs_id:
-            load_src['cs'] = self.cs_id
+            src_restraint['cs'] = self.cs_id
 
-        for axis in self.axes:
-            const_types, const_dep = axis.dependency.dump()
+        for data in self.data:
+            src_data, src_types, src_deps = data.dump()
 
-            load_src_data.append(axis.data.dump())
-            load_src_dependency_type.append(const_types)
-            load_src_dep_var_num.append(const_dep)
-            load_src_dep_var_size.append(len(axis.dependency))
+            src_restraint['data'].append(src_data)
+            src_restraint['dependency_type'].append(src_types)
+            src_restraint['dep_var_num'].append(src_deps)
+            src_restraint['dep_var_size'].append(len(data))
 
-        return load_src
+        return src_restraint
+
+
+class FCInitialSet:
+    id: int
+    name: str
+
+    apply: FCValue
+    cs_id: int
+    data: List[FCData]
+    flags: List[str]
+
+    def __init__(self, src_initial_set:SrcFCInitialSet):
+
+        self.id = src_initial_set['id']
+        self.cs_id = src_initial_set.get('cs', 0)
+
+        self.apply = FCValue(src_initial_set['apply_to'], dtype('int32'))
+        self.apply.resize(src_initial_set.get('apply_to_size', 0))
+
+        if 'data' in src_initial_set:
+            for i, data in enumerate(src_initial_set["data"]):
+                self.data.append(FCData(
+                    data,
+                    src_initial_set["dependency_type"][i], 
+                    src_initial_set['dep_var_num'][i]
+                ))
+        self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in flags]
+
+    def dump(self) -> SrcFCInitialSet:
+
+        src_initial_set: SrcFCInitialSet = {
+            'id': self.id,
+            'apply_to': self.apply.dump(),
+            'apply_to_size': len(self.apply),
+            'data': [],
+            'dependency_type': [],
+            'dep_var_num': [],
+            'dep_var_size': [],
+            'flag': []
+        }
+
+        if self.cs_id:
+            src_initial_set['cs'] = self.cs_id
+
+        for data in self.data:
+            src_data, src_types, src_deps = data.dump()
+
+            src_initial_set['data'].append(src_data)
+            src_initial_set['dependency_type'].append(src_types)
+            src_initial_set['dep_var_num'].append(src_deps)
+            src_initial_set['dep_var_size'].append(len(data))
+
+        return src_initial_set
