@@ -3,7 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fc_value import decode, encode
-from fc_dict import FCDict, RequiredId
+from fc_dict import FCDict, FCSrcRequiredId
 
 FC_ELEMENT_TYPE_NAME = Literal[
     'NONE',
@@ -645,7 +645,7 @@ FC_ELEMENT_TYPES_KEYNAME: Dict[FC_ELEMENT_TYPE_NAME, FCElementType] = {
 }
 
 
-class FCElement(RequiredId):
+class FCElement(FCSrcRequiredId):
     """
     Определяет один конечный элемент в сетке.
     """

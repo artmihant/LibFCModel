@@ -1,13 +1,24 @@
 
-from typing import Generic, TypeVar, TypedDict, Dict
+from abc import ABC, abstractmethod
+from typing import Any, Generic, TypeVar, TypedDict, Dict
 
 
+S = TypeVar("S")
 
-class RequiredId:
+
+class FCSrcRequiredId(Generic[S], ABC):
     id: int
+    
+    @abstractmethod
+    def __init__(self, src_data: S):
+        pass
+
+    @abstractmethod
+    def dump(self) -> S:
+        pass
 
 
-T = TypeVar("T", bound=RequiredId)
+T = TypeVar("T", bound=FCSrcRequiredId)
 
 
 class FCDict(Generic[T]):
