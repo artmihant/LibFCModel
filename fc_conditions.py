@@ -259,6 +259,8 @@ class FCInitialSet:
 
     def dump(self) -> SrcFCInitialSet:
 
+        apply_to, apply_to_size = self.apply.dump(),   
+
         src_initial_set: SrcFCInitialSet = {
             'id': self.id,
             'apply_to': self.apply.dump(),

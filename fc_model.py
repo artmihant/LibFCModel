@@ -9,7 +9,7 @@ from fc_dict import FCDict, FCSrcRequiredId
 from fc_mesh import FCMesh
 from fc_materials import FCMaterial
 from fc_conditions import FCLoad, FCInitialSet, FCRestraint
-from fc_value import decode, encode
+from fc_value import FCValue, decode, encode
 
 
 class FCHeader(TypedDict):
@@ -19,88 +19,225 @@ class FCHeader(TypedDict):
     types: Dict[str, int]
 
 
-class FCConstraint(FCSrcRequiredId):
+
+# class FCBlockMaterialSteps(TypedDict):
+#     ids: NDArray[int32]
+#     steps: NDArray[int32]
+
+
+class FCSrcBlock(TypedDict):
+    id: int
+    cs_id: int
+    material_id: int
+    property_id: int
+    # steps: NotRequired[NDArray[int32]]
+    # material: NotRequired[FCBlockMaterialSteps]
+
+
+class FCBlock(FCSrcRequiredId[FCSrcBlock]):
+    """
+    Определяет 'блок' элементов.
+    Блок - это группа элементов, которая ссылается на один и тот же материал
+    и имеет общие свойства.
+    """
+    id: int
+    cs_id: int
+    material_id: int
+    property_id: int
+
+    def __init__(self, src_data: FCSrcBlock):
+        self.id = src_data['id']
+        self.cs_id = src_data['cs_id']
+        self.material_id = src_data['material_id']
+        self.property_id = src_data['property_id']
+
+    def dump(self) -> FCSrcBlock:
+
+        return {
+            "id": self.id,
+            "material_id": self.material_id,
+            "property_id": self.property_id,
+            "cs_id": self.cs_id,
+        }
+
+
+class FCSrcCoordinateSystem(TypedDict):
+    id: int
+    type: str
     name: str
-    type: int
-    master: NDArray[int32]
-    slave: NDArray[int32]
-    master_dim: int
-    slave_dim: int
+    origin: str
+    dir1: str
+    dir2: str
+
+
+class FCCoordinateSystem(FCSrcRequiredId[FCSrcCoordinateSystem]):
+    id: int
+    type: str
+    name: str
+    origin: NDArray[float64]
+    dir1: NDArray[float64]
+    dir2: NDArray[float64]
+
+
+    def __init__(
+        self,
+        src_data: FCSrcCoordinateSystem
+    ):
+        self.id = src_data['id']
+        self.type = src_data['type']
+        self.name = src_data['name']
+        self.origin = decode(src_data['origin'], dtype(float64))
+        self.dir1 = decode(src_data['dir1'], dtype(float64))
+        self.dir2 = decode(src_data['dir2'], dtype(float64))
+
+
+    def dump(self) -> FCSrcCoordinateSystem:
+        return {
+            "id": self.id,
+            "type": self.type,
+            "name": self.name,
+            "origin": decode(self.origin, dtype(float64)),
+            "dir1": decode(self.dir1, dtype(float64)),
+            "dir2": decode(self.dir2, dtype(float64))
+        }
+
+
+
+class FCSrcConstraint(TypedDict):
+    id: int
+    name: str
+    type: str
+    master: str
+    master_size: int
+    slave: str
+    slave_size: int
+
+
+class FCConstraint(FCSrcRequiredId[FCSrcConstraint]):
+    id: int
+    name: str
+    type: Union[int, str]
+    master: FCValue
+    slave: FCValue
     properties: Dict[str, Any]
 
     def __init__(
         self,
-        id: int,
-        name: str,
-        type: int,
-        master: NDArray[int32],
-        slave: NDArray[int32],
-        master_dim: int,
-        slave_dim: int,
-        properties: Dict[str, Any]
+        src_data: FCSrcConstraint
     ):
-        self.id = id
-        self.name = name
-        self.type = type
-        self.master = master
-        self.slave = slave
-        self.master_dim = master_dim
-        self.slave_dim = slave_dim
-        self.properties = properties
+        self.id = src_data['id']
+        self.name = src_data['name']
+        self.type = src_data['type']
+        
+        self.master = FCValue(src_data['master'], dtype(int32))
+        self.master.resize(src_data['master_size'])
+        self.slave = FCValue(src_data['slave'], dtype(int32))
+        self.slave.resize(src_data['slave_size'])
+        
+        self.properties = {
+                    key:src_data[key] for key in src_data
+                    if key not in FCSrcConstraint.__annotations__.keys()}
+        
+
+    def dump(self) -> FCSrcConstraint:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "type": self.type,
+            "master": encode(self.master),
+            "slave": encode(self.slave),
+            "master_dim": self.master_dim,
+            "slave_dim": self.slave_dim,
+            "properties": self.properties
+        }
 
 
-class FCSet(FCSrcRequiredId):
-    apply_to: NDArray[int64]
+class FCSrcSet(TypedDict):
+    id: int
+    name: str
+    apply_to: str
+    apply_to_size: int
+
+
+class FCSet(FCSrcRequiredId[FCSrcSet]):
+    id: int
+    apply: NDArray[int64]
     name: str
 
-    def __init__(
-        self,
-        apply_to: NDArray[int64],
-        id: int,
-        name: str
-    ):
-        self.apply_to = apply_to
-        self.id = id
-        self.name = name
+    def __init__(self, src_data: FCSrcSet):
+        self.apply = decode(src_data['apply_to'], dtype(int64))
+        self.id = src_data['id']
+        self.name = src_data['name']
+
+    def dump(self) -> FCSrcSet:
+        return {
+            "apply_to": encode(self.apply),
+            "apply_to_size": len(self.apply),
+            "id": self.id,
+            "name": self.name
+        }
 
 
-class FCReceiver(FCSrcRequiredId):
-    apply_to: Union[NDArray[int32], str]
+class FCSrcReceiver(TypedDict):
+    id: int
+    name: str
+    apply_to: str
+    apply_to_size: int
+    dofs: List[int]
+    type: int
+
+
+class FCReceiver(FCSrcRequiredId[FCSrcReceiver]):
+    id: int
+    apply: NDArray[int32]
     dofs: List[int]
     name: str
     type: int
 
-    def __init__(
-        self,
-        apply_to: Union[NDArray[int32], str],
-        dofs: List[int],
-        id: int,
-        name: str,
-        type: int
-    ):
-        self.apply_to = apply_to
-        self.dofs = dofs
-        self.id = id
-        self.name = name
-        self.type = type
+    def __init__(self, src_data: FCSrcReceiver):
+        self.apply = decode(src_data['apply_to'], dtype(int32))
+        self.id = src_data['id']
+        self.name = src_data['name']
+        self.dofs = src_data['dofs']
+        self.type = src_data['type']
+
+    def dump(self) -> FCSrcReceiver:
+        return {
+            "apply_to": encode(self.apply),
+            "apply_to_size": len(self.apply),
+            "id": self.id,
+            "name": self.name,
+            "dofs": self.dofs,
+            "type": self.type
+        }
 
 
-class FCPropertyTable(FCSrcRequiredId):
+class FCSrcPropertyTable(TypedDict):
+    id: int
     type: int
     properties: Dict[str, Any]
     additional_properties: Dict[str, Any]
 
-    def __init__(
-        self,
-        id: int,
-        type: int,
-        properties: Dict[str, Any],
-        additional_properties: Dict[str, Any]
-    ):
-        self.id = id
-        self.type = type
-        self.properties = properties
-        self.additional_properties = additional_properties
+
+class FCPropertyTable(FCSrcRequiredId[FCSrcPropertyTable]):
+    id: int
+    type: int
+    properties: Dict[str, Any]
+    additional_properties: Dict[str, Any]
+
+    def __init__(self, src_data: FCSrcPropertyTable):
+        self.id = src_data['id']
+        self.type = src_data['type']
+        self.properties = src_data['properties']
+        self.additional_properties = src_data['additional_properties']
+
+    def dump(self) -> FCSrcPropertyTable:
+        return {
+            "id": self.id,
+            "type": self.type,
+            "properties": self.properties,
+            "additional_properties": self.additional_properties
+        }
 
 
 
@@ -178,13 +315,13 @@ class FCModel:
         """
         
         # Инициализация всех коллекций как пустых
-        self.coordinate_systems = FCDict()
+        self.coordinate_systems = FCDict(FCCoordinateSystem)
 
         self.mesh = FCMesh()
 
-        self.blocks = FCDict()
-        self.property_tables = FCDict()
-        self.materials = FCDict()
+        self.blocks = FCDict(FCBlock)
+        self.property_tables = FCDict(FCPropertyTable)
+        self.materials = FCDict(FCMaterial)
         
         self.loads = []
         self.restraints = []
@@ -195,14 +332,12 @@ class FCModel:
         self.periodic_constraints = []
         self.receivers = []
 
-        self.nodesets = FCDict()
-        self.sidesets = FCDict()
+        self.nodesets = FCDict(FCSet)
+        self.sidesets = FCDict(FCSet)
 
         if filepath:
             with open(filepath, "r") as f:
                 src_data = json.load(f)
-                self.loads(src_data)
-
 
             self.src_data = src_data
             self._decode_header(src_data)
@@ -220,7 +355,6 @@ class FCModel:
             self._decode_receivers(src_data)
             self._decode_property_tables(src_data)
             self._decode_sets(src_data)
-
 
 
     def save(self, filepath):
@@ -244,6 +378,10 @@ class FCModel:
 
         self._encode_blocks(output_data)
         self._encode_contact_constraints(output_data)
+
+        if self.coordinate_systems:
+            output_data['coordinate_systems'] = self.coordinate_systems.encode()
+
         self._encode_coordinate_systems(output_data)
         self._encode_coupling_constraints(output_data)
         self._encode_periodic_constraints(output_data)
@@ -260,48 +398,30 @@ class FCModel:
 
         return output_data
 
-
     def _decode_header(self, input_data):
         self.header = input_data.get('header')
-
 
     def _encode_header(self, output_data):
         output_data['header'] = self.header
 
-
     def _decode_blocks(self, input_data):
-        for src_block in input_data.get('blocks'):
+        for src_block in input_data.get('blocks', []):
             self.blocks[src_block['id']] = FCBlock(src_block)
 
     def _encode_blocks(self, output_data):
         if self.blocks:
             output_data['blocks'] = [block.dump() for block in self.blocks]
 
-
     def _decode_coordinate_systems(self, input_data):
 
-        for cs in input_data.get('coordinate_systems'):
-            self.coordinate_systems[cs['id']] = {
-                'dir1': decode(cs['dir1'], dtype(float64)),
-                'dir2': decode(cs['dir2'], dtype(float64)),
-                'origin': decode(cs['origin'], dtype(float64)),
-                "id": cs['id'],
-                "name": cs['name'],
-                "type": cs['type']
-            }
-
+        for src_cs in input_data.get('coordinate_systems', []):
+            coordinate_systems = FCCoordinateSystem(src_cs)
+            self.coordinate_systems[coordinate_systems.id] = coordinate_systems
 
     def _encode_coordinate_systems(self, output_data):
 
         if self.coordinate_systems:
-            output_data['coordinate_systems'] = [{
-                'dir1': encode(cs['dir1']),
-                'dir2': encode(cs['dir2']),
-                'origin': encode(cs['origin']),
-                "id": cs['id'],
-                "name": cs['name'],
-                "type": cs['type']
-            } for cs in self.coordinate_systems]
+            output_data['coordinate_systems'] = [coordinate_system.dump() for coordinate_system in self.coordinate_systems]
 
 
     def _decode_contact_constraints(self, input_data):
@@ -310,7 +430,7 @@ class FCModel:
             master = decode(cc_src['master'], dtype(int32))
             slave = decode(cc_src['slave'], dtype(int32))
 
-            self.contact_constraints.append({
+            self.contact_constraints.append(FCConstraint({
                 'id': cc_src['id'],
                 'name': cc_src['name'],
                 'type': cc_src['type'],
@@ -325,7 +445,7 @@ class FCModel:
                         'master','master_size',
                         'slave','slave_size',
                     ]}
-            })
+            }))
 
 
     def _encode_contact_constraints(self, output_data):

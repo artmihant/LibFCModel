@@ -645,6 +645,15 @@ FC_ELEMENT_TYPES_KEYNAME: Dict[FC_ELEMENT_TYPE_NAME, FCElementType] = {
 }
 
 
+class FCSrcElement(TypedDict):
+    id: int
+    block: int
+    parent_id: int
+    type: FC_ELEMENT_TYPE_NAME
+    nodes: List[int]
+    order: int
+
+
 class FCElement(FCSrcRequiredId):
     """
     Определяет один конечный элемент в сетке.
@@ -652,27 +661,32 @@ class FCElement(FCSrcRequiredId):
     id: int
     block: int
     parent_id: int
-    type: FCElementType
+    type: FC_ELEMENT_TYPE_NAME
     nodes: List[int]
     order: int
 
-    def __init__(self, id: int, block: int, parent_id: int, type: FCElementType, nodes: List[int], order: int):
+    def __init__(self, src_element: FCSrcElement):
         """
         Инициализатор для FCElem.
-
-        :param id: Уникальный идентификатор элемента
-        :param block: ID блока, к которому принадлежит элемент
-        :param parent_id: ID родительской топологической сущности
-        :param type: Словарь, описывающий тип элемента (например, HEX8, TETRA4)
-        :param nodes: Список ID узлов, образующих элемент
-        :param order: Порядок элемента (1 - линейный, 2 - квадратичный)
         """
-        self.id = id
-        self.block = block
-        self.parent_id = parent_id
-        self.type = type
-        self.nodes = nodes
-        self.order = order
+
+        self.id = src_element['id']
+        self.block = src_element['block']
+        self.parent_id = src_element['parent_id']
+        self.type = src_element['type']
+        self.nodes = src_element['nodes']
+        self.order = src_element['order']
+       
+
+    def dump(self):
+        return {
+            'id': self.id,
+            'block': self.block,
+            'parent_id': self.parent_id,
+            'type': self.type,
+            'nodes': self.nodes,
+            'order': self.order,
+        }
 
 
 class SrcFCMesh(TypedDict):
@@ -705,6 +719,7 @@ class FCMesh:
 
     elements: Dict[FC_ELEMENT_TYPE_NAME, FCDict[FCElement]]
 
+
     def __init__(self):
 
         # INSERT_YOUR_CODE
@@ -712,6 +727,7 @@ class FCMesh:
         self.nodes_xyz = np.array([], dtype=np.float64)
 
         self.elements = {}
+
 
     def decode(self, src_mesh: SrcFCMesh):
 
@@ -729,21 +745,21 @@ class FCMesh:
         elem_offsets = [0, *np.cumsum(elem_sizes)]
 
         for i, eid in enumerate(elem_ids):
-            fc_type = FC_ELEMENT_TYPES[elem_types[i]]
+            fc_type_name = FC_ELEMENT_TYPES_KEYID[elem_types[i]]['name']
 
-            if fc_type['name'] not in self.elements:
-                self.elements[fc_type['name']] = FCDict()
+            if fc_type_name not in self.elements:
+                self.elements[fc_type_name] = FCDict(FCElement)
 
-            element = FCElement(
-                id = eid,
-                type = fc_type,
-                nodes = elem_nodes[elem_offsets[i]:elem_offsets[i+1]].tolist(),
-                parent_id =  elem_parent_ids[i],
-                block = elem_blocks[i],
-                order = elem_orders[i],
-            )
+            element = FCElement({
+                'id': eid,
+                'type': fc_type_name,
+                'nodes': elem_nodes[elem_offsets[i]:elem_offsets[i+1]].tolist(),
+                'parent_id': elem_parent_ids[i],
+                'block': elem_blocks[i],
+                'order': elem_orders[i],
+            })
 
-            self.elements[fc_type['name']][eid] = element
+            self.elements[fc_type_name][eid] = element
 
 
     def encode(self) -> SrcFCMesh:
@@ -761,7 +777,7 @@ class FCMesh:
             elem_blocks[i] = elem['block']
             elem_parent_ids[i] = elem['parent_id']
             elem_orders[i] = elem['order']
-            elem_types[i] = elem['type']['fc_id']
+            elem_types[i] = elem['type']
 
         elem_nodes: NDArray = np.array(self.nodes_list, np.int32)
 
@@ -784,19 +800,23 @@ class FCMesh:
     def __len__(self):
         return sum([len(self.elements[typename]) for typename in self.elements])
 
+
     def __bool__(self):
         return len(self) > 0
+
 
     def __iter__(self):
         for typename in self.elements:
             for elem in self.elements[typename]:
                 yield elem
 
+
     def __contains__(self, key):
         for tp in self.elements:
             if key in self.elements[tp]:
                 return True
         return False
+
 
     def __getitem__(self, key:Union[int, FC_ELEMENT_TYPE_NAME]):
         if isinstance(key, str):
@@ -807,25 +827,30 @@ class FCMesh:
                     return self.elements[typename][key]
         raise KeyError(f'{key}')
 
+
     def __setitem__(self, key:int, item: FCElement):
 
-        if item.type['name'] not in self.elements:
-            self.elements[item.type['name']] = FCDict()
+        if item.type not in self.elements:
+            self.elements[item.type] = FCDict(FCElement)
 
-        self.elements[item.type['name']].add(item)
+        self.elements[item.type].add(item)
+
 
     @property
     def nodes_list(self):
         return [node for elem in self for node in elem['nodes']]
+
 
     def compress(self):
         index_map = {elem['id']: i + 1 for i, elem in enumerate(self)}
         self.reindex(index_map)
         return index_map
 
+
     def reindex(self, index_map):
         for typename in self.elements:
             self.elements[typename].reindex(index_map)
+
 
     @property
     def max_id(self):
@@ -835,9 +860,10 @@ class FCMesh:
                 max_id = self.elements[tp].max_id
         return max_id
 
+
     def add(self, item: FCElement):
         if item.id in self or item.id < 1:
             item.id = self.max_id+1
 
-        return self.elements[item.type['name']].add(item)
+        return self.elements[item.type].add(item)
 

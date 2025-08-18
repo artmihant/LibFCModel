@@ -1,6 +1,6 @@
 from base64 import b64decode, b64encode
 import binascii
-from typing import Literal, Union
+from typing import Literal, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
@@ -38,32 +38,24 @@ class FCValue:
 
     type: Literal['formula', 'array', 'null'] = 'null'
     data: Union[np.ndarray, str]
-    dim: int
 
-    def __init__(self, src_data: str, dtype:np.dtype = np.dtype('int32'), dim=1):
+    def __init__(self, data_str: str, size: int, dtype:np.dtype = np.dtype('int32')):
 
-        if src_data == '':
+        if data_str == '':
             self.data = np.array([], dtype=dtype)
             self.type = 'null'
-        if isBase64(src_data):
-            self.data = decode(src_data, dtype).reshape(-1, dim)
+        if isBase64(data_str):
+            self.data = decode(data_str, dtype).reshape(size, -1)
             self.type = 'array'
         else:
-            self.data = src_data
+            self.data = data_str
             self.type = 'formula'
 
-        self.dim = dim
-
-    def resize(self, size: int):
-        if isinstance(self.data, np.ndarray) and size > 0 and self.data.size % size == 0:
-            self.data = self.data.reshape(size, -1)
-            self.dim = self.data.shape[1]
-
-    def dump(self) -> str:
+    def dump(self) -> Tuple[str, int]:
         if isinstance(self.data, np.ndarray):
-            return encode(self.data)
+            return encode(self.data), len(self.data)
         else:
-            return self.data
+            return self.data, 0
 
     def __len__(self):
         if self.type == 'array':

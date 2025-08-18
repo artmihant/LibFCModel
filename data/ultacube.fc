@@ -11,21 +11,22 @@
    "contact_constraints" : 
    [
       {
-         "detection_tolerance" : 0.10000000000000001,
-         "distance" : 10.0,
          "id" : 1,
-         "ignore_tied_stiffness" : false,
          "master" : "BQAAAAUAAAAHAAAABQAAAAgAAAAFAAAABgAAAAUAAAA=",
          "master_size" : 4,
-         "method" : "auto",
-         "name" : "Contact 1",
-         "offset" : 0.0,
-         "search_radius" : 1.0,
          "slave" : "AwAAAAAAAAABAAAAAAAAAAIAAAAAAAAABAAAAAAAAAA=",
          "slave_size" : 4,
+         "name" : "Contact 1",
+         "type" : "tied"
+
+         "detection_tolerance" : 0.10000000000000001,
+         "distance" : 10.0,
+         "ignore_tied_stiffness" : false,
+         "method" : "auto",
+         "offset" : 0.0,
+         "search_radius" : 1.0,
          "thermo_penalty_mult" : 1.0,
          "tolerance" : 0.00050000000000000001,
-         "type" : "tied"
       }
    ],
    "coordinate_systems" : 

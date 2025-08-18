@@ -1,6 +1,6 @@
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar, TypedDict, Dict
+from typing import Any, Generic, Type, TypeVar, TypedDict, Dict
 
 
 S = TypeVar("S")
@@ -33,12 +33,14 @@ class FCDict(Generic[T]):
 
     Используется для хранения узлов, блоков, материалов и т.д.
     """
+    EntityType: Type[T]
 
     data: Dict[int, T]
 
     max_id:int
 
-    def __init__(self):
+    def __init__(self, EntityType: Type[T]):
+        self.EntityType = EntityType
         self.max_id = 0
         self.data = {}
 
@@ -95,3 +97,10 @@ class FCDict(Generic[T]):
         self.reindex(index_map)
         return index_map
 
+    def decode(self, input_data):
+        for src_cs in input_data:
+            entity = self.EntityType(src_cs)
+            self[entity.id] = entity
+
+    def encode(self):
+        return [entity.dump() for entity in self]

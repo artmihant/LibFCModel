@@ -60,11 +60,11 @@ class FCData:
         else:
             raise ValueError("Invalid dependency data")
 
-    def dump(self) -> Tuple[str, Union[List[int], int], Union[List[str], str]]:
+    def dump(self) -> Union[Tuple[str, List[int], List[str]], Tuple[str, int, str]]:
         if self.type == -1:
-            return self.value.dump(), [DEPENDENCY_TYPES_R[deps.type] for deps in self.table], [deps.value.dump() for deps in self.table]
+            return self.value.dump()[0], [DEPENDENCY_TYPES_R[deps.type] for deps in self.table], [deps.value.dump()[0] for deps in self.table]
         else:
-            return self.value.dump(), self.type, ""
+            return self.value.dump()[0], self.type, ""
 
     def __len__(self):
         if not len(self.table):
