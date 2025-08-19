@@ -3,7 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fc_value import decode, encode
-from fc_dict import FCDict, FCSrcRequiredId
+from fc_dict import FCSrcRequiredId
 
 FC_ELEMENT_TYPE_NAME = Literal[
     'NONE',
@@ -425,7 +425,7 @@ FC_ELEMENT_TYPES: List[FCElementType] = [
         'fc_id': 6,
         'dim': 3,
         'order': 1,
-        'nodes': 5,
+        'nodes': 6,
         'edges': [[0, 1, 2, 0], [3, 4, 5, 3], [0, 3], [1, 4], [2, 5]],
         'facets': [[0, 1, 2], [5, 4, 3], [0, 2, 5, 3], [0, 3, 4, 1], [1, 4, 5, 2]],
         'tetras': [[0, 5, 4, 3], [0, 4, 2, 1], [0, 2, 4, 5]],
@@ -446,7 +446,7 @@ FC_ELEMENT_TYPES: List[FCElementType] = [
         'fc_id': 20,
         'dim': 3,
         'order': 1,
-        'nodes': 5,
+        'nodes': 6,
         'edges': [[0, 1, 2, 0], [3, 4, 5, 3], [0, 3], [1, 4], [2, 5]],
         'facets': [[0, 1, 2], [5, 4, 3], [0, 2, 5, 3], [0, 3, 4, 1], [1, 4, 5, 2]],
         'tetras': [[0, 5, 4, 3], [0, 4, 2, 1], [0, 2, 4, 5]],
@@ -706,18 +706,18 @@ class FCMesh:
     """
     Контейнер для хранения всех элементов модели, сгруппированных по типам.
 
-    Внутри `FCElems` элементы хранятся не в одном списке, а в словаре `data`,
+    Внутри коллекции элементы хранятся в словаре `elements`,
     где ключами являются строковые имена типов элементов (e.g., 'HEX8', 'TETRA4'),
-    а значениями - объекты `FCDict`, содержащие элементы соответствующего типа.
+    а значениями — словари `Dict[int, FCElement]` соответствующего типа.
 
     Этот класс также управляет общей кодировкой и декодировкой всего набора
     элементов в/из формата .fc.
     """
 
-    nodes_ids: NDArray[np.int32] # Сделан не через FCDict с целью оптимизации.
+    nodes_ids: NDArray[np.int32]
     nodes_xyz: NDArray[np.float64]
 
-    elements: Dict[FC_ELEMENT_TYPE_NAME, FCDict[FCElement]]
+    elements: Dict[FC_ELEMENT_TYPE_NAME, Dict[int, FCElement]]
 
 
     def __init__(self):
@@ -748,7 +748,7 @@ class FCMesh:
             fc_type_name = FC_ELEMENT_TYPES_KEYID[elem_types[i]]['name']
 
             if fc_type_name not in self.elements:
-                self.elements[fc_type_name] = FCDict(FCElement)
+                self.elements[fc_type_name] = {}
 
             element = FCElement({
                 'id': eid,
@@ -773,11 +773,11 @@ class FCMesh:
         elem_types: NDArray = np.zeros(elems_count, np.int8)
 
         for i, elem in enumerate(self):
-            elem_ids[i] = elem['id']
-            elem_blocks[i] = elem['block']
-            elem_parent_ids[i] = elem['parent_id']
-            elem_orders[i] = elem['order']
-            elem_types[i] = elem['type']
+            elem_ids[i] = elem.id
+            elem_blocks[i] = elem.block
+            elem_parent_ids[i] = elem.parent_id
+            elem_orders[i] = elem.order
+            elem_types[i] = FC_ELEMENT_TYPES_KEYNAME[elem.type]['fc_id']
 
         elem_nodes: NDArray = np.array(self.nodes_list, np.int32)
 
@@ -807,7 +807,7 @@ class FCMesh:
 
     def __iter__(self):
         for typename in self.elements:
-            for elem in self.elements[typename]:
+            for elem in self.elements[typename].values():
                 yield elem
 
 
@@ -831,39 +831,47 @@ class FCMesh:
     def __setitem__(self, key:int, item: FCElement):
 
         if item.type not in self.elements:
-            self.elements[item.type] = FCDict(FCElement)
-
-        self.elements[item.type].add(item)
+            self.elements[item.type] = {}
+        self.elements[item.type][item.id] = item
 
 
     @property
     def nodes_list(self):
-        return [node for elem in self for node in elem['nodes']]
+        return [node for elem in self for node in elem.nodes]
 
 
     def compress(self):
-        index_map = {elem['id']: i + 1 for i, elem in enumerate(self)}
+        index_map = {elem.id: i + 1 for i, elem in enumerate(self)}
         self.reindex(index_map)
         return index_map
 
 
     def reindex(self, index_map):
-        for typename in self.elements:
-            self.elements[typename].reindex(index_map)
+        for typename in list(self.elements.keys()):
+            new_bucket: Dict[int, FCElement] = {}
+            for elem in self.elements[typename].values():
+                if elem.id in index_map:
+                    elem.id = index_map[elem.id]
+                new_bucket[elem.id] = elem
+            self.elements[typename] = new_bucket
 
 
     @property
     def max_id(self):
         max_id = 0
         for tp in self.elements:
-            if max_id < self.elements[tp].max_id:
-                max_id = self.elements[tp].max_id
+            if self.elements[tp]:
+                local_max = max(self.elements[tp].keys())
+                if max_id < local_max:
+                    max_id = local_max
         return max_id
 
 
     def add(self, item: FCElement):
+        if item.type not in self.elements:
+            self.elements[item.type] = {}
         if item.id in self or item.id < 1:
-            item.id = self.max_id+1
-
-        return self.elements[item.type].add(item)
+            item.id = self.max_id + 1
+        self.elements[item.type][item.id] = item
+        return item.id
 

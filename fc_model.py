@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from numpy import dtype, int32, int64, float64
 
-from fc_dict import FCDict, FCSrcRequiredId
+from fc_dict import FCSrcRequiredId
 from fc_mesh import FCMesh
 from fc_materials import FCMaterial
 from fc_conditions import FCLoad, FCInitialSet, FCRestraint
@@ -17,7 +17,6 @@ class FCHeader(TypedDict):
     description: str
     version: int
     types: Dict[str, int]
-
 
 
 # class FCBlockMaterialSteps(TypedDict):
@@ -96,9 +95,9 @@ class FCCoordinateSystem(FCSrcRequiredId[FCSrcCoordinateSystem]):
             "id": self.id,
             "type": self.type,
             "name": self.name,
-            "origin": decode(self.origin, dtype(float64)),
-            "dir1": decode(self.dir1, dtype(float64)),
-            "dir2": decode(self.dir2, dtype(float64))
+            "origin": encode(self.origin),
+            "dir1": encode(self.dir1),
+            "dir2": encode(self.dir2)
         }
 
 
@@ -106,7 +105,7 @@ class FCCoordinateSystem(FCSrcRequiredId[FCSrcCoordinateSystem]):
 class FCSrcConstraint(TypedDict):
     id: int
     name: str
-    type: str
+    type: Union[int, str]
     master: str
     master_size: int
     slave: str
@@ -135,21 +134,26 @@ class FCConstraint(FCSrcRequiredId[FCSrcConstraint]):
         self.slave.resize(src_data['slave_size'])
         
         self.properties = {
-                    key:src_data[key] for key in src_data
+                    key: src_data[key] for key in src_data #type:ignore
                     if key not in FCSrcConstraint.__annotations__.keys()}
         
 
     def dump(self) -> FCSrcConstraint:
-        return {
+
+        src_constraint: FCSrcConstraint = {
             "id": self.id,
             "name": self.name,
             "type": self.type,
-            "master": encode(self.master),
-            "slave": encode(self.slave),
-            "master_dim": self.master_dim,
-            "slave_dim": self.slave_dim,
-            "properties": self.properties
+            "master": self.master.dump(),
+            "slave": self.slave.dump(),
+            "master_size": len(self.master),
+            "slave_size": len(self.slave),
         }
+
+        for key in self.properties:
+            src_constraint[key] = self.properties[key] #type:ignore
+
+        return src_constraint
 
 
 class FCSrcSet(TypedDict):
@@ -161,17 +165,17 @@ class FCSrcSet(TypedDict):
 
 class FCSet(FCSrcRequiredId[FCSrcSet]):
     id: int
-    apply: NDArray[int64]
+    apply: FCValue
     name: str
 
     def __init__(self, src_data: FCSrcSet):
-        self.apply = decode(src_data['apply_to'], dtype(int64))
+        self.apply = FCValue(src_data['apply_to'], dtype(int64))
         self.id = src_data['id']
         self.name = src_data['name']
 
     def dump(self) -> FCSrcSet:
         return {
-            "apply_to": encode(self.apply),
+            "apply_to": self.apply.dump(),
             "apply_to_size": len(self.apply),
             "id": self.id,
             "name": self.name
@@ -189,13 +193,13 @@ class FCSrcReceiver(TypedDict):
 
 class FCReceiver(FCSrcRequiredId[FCSrcReceiver]):
     id: int
-    apply: NDArray[int32]
+    apply: FCValue
     dofs: List[int]
     name: str
     type: int
 
     def __init__(self, src_data: FCSrcReceiver):
-        self.apply = decode(src_data['apply_to'], dtype(int32))
+        self.apply = FCValue(src_data['apply_to'], dtype(int32))
         self.id = src_data['id']
         self.name = src_data['name']
         self.dofs = src_data['dofs']
@@ -203,7 +207,7 @@ class FCReceiver(FCSrcRequiredId[FCSrcReceiver]):
 
     def dump(self) -> FCSrcReceiver:
         return {
-            "apply_to": encode(self.apply),
+            "apply_to": self.apply.dump(),
             "apply_to_size": len(self.apply),
             "id": self.id,
             "name": self.name,
@@ -227,9 +231,9 @@ class FCPropertyTable(FCSrcRequiredId[FCSrcPropertyTable]):
 
     def __init__(self, src_data: FCSrcPropertyTable):
         self.id = src_data['id']
-        self.type = src_data['type']
-        self.properties = src_data['properties']
-        self.additional_properties = src_data['additional_properties']
+        self.type = src_data.get('type', 0)  # тип может отсутствовать
+        self.properties = src_data.get('properties', {})
+        self.additional_properties = src_data.get('additional_properties', {})
 
     def dump(self) -> FCSrcPropertyTable:
         return {
@@ -250,11 +254,10 @@ class FCModel:
 
     Атрибуты:
         header (FCHeader): Заголовок файла.
-        coordinate_systems (FCDict[FCCoordinateSystem]): Коллекция систем координат.
-        nodes (FCDict[FCNode]): Коллекция узлов сетки.
-        elems (FCElems): Контейнер для коллекций элементов различных типов.
-        blocks (FCDict[FCBlock]): Коллекция блоков, связывающих элементы с материалами.
-        materials (FCDict[FCMaterial]): Коллекция материалов и их физических свойств.
+        coordinate_systems (Dict[int, FCCoordinateSystem]): Коллекция систем координат.
+        elems (FCMesh): Контейнер сетки и элементов.
+        blocks (Dict[int, FCBlock]): Коллекция блоков, связывающих элементы с материалами.
+        materials (Dict[int, FCMaterial]): Коллекция материалов и их физических свойств.
         loads (List[FCLoad]): Список нагрузок, приложенных к модели.
         restraints (List[FCRestraint]): Список закреплений (ограничений).
         ... и другие коллекции сущностей.
@@ -278,13 +281,13 @@ class FCModel:
         "version": 3
     }
 
-    coordinate_systems: FCDict[FCCoordinateSystem]
+    coordinate_systems: Dict[int, FCCoordinateSystem]
 
     mesh: FCMesh
 
-    blocks: FCDict[FCBlock]
-    property_tables: FCDict[FCPropertyTable]
-    materials: FCDict[FCMaterial]
+    blocks: Dict[int, FCBlock]
+    property_tables: Dict[int, FCPropertyTable]
+    materials: Dict[int, FCMaterial]
 
     loads: List[FCLoad]
     restraints: List[FCRestraint]
@@ -294,11 +297,10 @@ class FCModel:
     coupling_constraints: List[FCConstraint]
     periodic_constraints: List[FCConstraint]
 
-
     receivers: List[FCReceiver]
 
-    nodesets: FCDict[FCSet]
-    sidesets: FCDict[FCSet]
+    nodesets: Dict[int, FCSet]
+    sidesets: Dict[int, FCSet]
 
     settings: dict = {}
 
@@ -315,25 +317,25 @@ class FCModel:
         """
         
         # Инициализация всех коллекций как пустых
-        self.coordinate_systems = FCDict(FCCoordinateSystem)
+        self.coordinate_systems = {}
 
         self.mesh = FCMesh()
 
-        self.blocks = FCDict(FCBlock)
-        self.property_tables = FCDict(FCPropertyTable)
-        self.materials = FCDict(FCMaterial)
+        self.blocks = {}
+        self.property_tables = {}
+        self.materials = {}
         
-        self.loads = []
-        self.restraints = []
-        self.initial_sets = []
+        self.loads: List[FCLoad] = []
+        self.restraints: List[FCRestraint] = []
+        self.initial_sets: List[FCInitialSet] = []
 
-        self.contact_constraints = []
-        self.coupling_constraints = []
-        self.periodic_constraints = []
-        self.receivers = []
+        self.contact_constraints: List[FCConstraint] = []
+        self.coupling_constraints: List[FCConstraint] = []
+        self.periodic_constraints: List[FCConstraint] = []
+        self.receivers: List[FCReceiver] = []
 
-        self.nodesets = FCDict(FCSet)
-        self.sidesets = FCDict(FCSet)
+        self.nodesets = {}
+        self.sidesets = {}
 
         if filepath:
             with open(filepath, "r") as f:
@@ -378,10 +380,6 @@ class FCModel:
 
         self._encode_blocks(output_data)
         self._encode_contact_constraints(output_data)
-
-        if self.coordinate_systems:
-            output_data['coordinate_systems'] = self.coordinate_systems.encode()
-
         self._encode_coordinate_systems(output_data)
         self._encode_coupling_constraints(output_data)
         self._encode_periodic_constraints(output_data)
@@ -405,135 +403,53 @@ class FCModel:
         output_data['header'] = self.header
 
     def _decode_blocks(self, input_data):
-        for src_block in input_data.get('blocks', []):
-            self.blocks[src_block['id']] = FCBlock(src_block)
+        self.blocks = {}
+        for src in input_data.get('blocks', []):
+            blk = FCBlock(src)
+            self.blocks[blk.id] = blk
 
     def _encode_blocks(self, output_data):
         if self.blocks:
-            output_data['blocks'] = [block.dump() for block in self.blocks]
+            output_data['blocks'] = [blk.dump() for blk in self.blocks.values()]
 
     def _decode_coordinate_systems(self, input_data):
-
-        for src_cs in input_data.get('coordinate_systems', []):
-            coordinate_systems = FCCoordinateSystem(src_cs)
-            self.coordinate_systems[coordinate_systems.id] = coordinate_systems
+        self.coordinate_systems = {}
+        for src in input_data.get('coordinate_systems', []):
+            cs = FCCoordinateSystem(src)
+            self.coordinate_systems[cs.id] = cs
 
     def _encode_coordinate_systems(self, output_data):
-
         if self.coordinate_systems:
-            output_data['coordinate_systems'] = [coordinate_system.dump() for coordinate_system in self.coordinate_systems]
+            output_data['coordinate_systems'] = [cs.dump() for cs in self.coordinate_systems.values()]
 
 
     def _decode_contact_constraints(self, input_data):
-
         for cc_src in input_data.get('contact_constraints', []):
-            master = decode(cc_src['master'], dtype(int32))
-            slave = decode(cc_src['slave'], dtype(int32))
-
-            self.contact_constraints.append(FCConstraint({
-                'id': cc_src['id'],
-                'name': cc_src['name'],
-                'type': cc_src['type'],
-                'master': master,
-                'master_dim': len(master)//cc_src['master_size'] if cc_src['master_size'] else 0,
-                'slave': slave,
-                'slave_dim': len(slave)//cc_src['slave_size'] if cc_src['slave_size'] else 0,
-                'properties': {
-                    key:cc_src[key] for key in cc_src
-                    if key not in [
-                        'id','name','type',
-                        'master','master_size',
-                        'slave','slave_size',
-                    ]}
-            }))
+            self.contact_constraints.append(FCConstraint(cc_src))
 
 
     def _encode_contact_constraints(self, output_data):
         if self.contact_constraints:
             output_data['contact_constraints'] = []
-
             for cc in self.contact_constraints:
-                cc_src = {
-                    'id': cc['id'],
-                    'type': cc['type'],
-                    'name': cc['name'],
-                    'master': encode(cc['master']),
-                    'master_size': len(cc['master'])//cc['master_dim'] if cc['master_dim'] else 0,
-                    'slave': encode(cc['slave']),
-                    'slave_size': len(cc['slave'])//cc['slave_dim'] if cc['slave_dim'] else 0,
-                }
-                for key in cc['properties']:
-                    cc_src[key] = cc['properties'][key]
-
-                output_data['contact_constraints'].append(cc_src)
-
+                output_data['contact_constraints'].append(cc.dump())
 
     def _decode_coupling_constraints(self, input_data):
-
         for cc_src in input_data.get('coupling_constraints', []):
-            master = decode(cc_src['master'], dtype(int32))
-            slave = decode(cc_src['slave'], dtype(int32))
-
-            self.coupling_constraints.append({
-                'id': cc_src['id'],
-                'name': cc_src['name'],
-                'type': cc_src['type'],
-                'master': master,
-                'master_dim': len(master)//cc_src['master_size'] if cc_src['master_size'] else 0,
-                'slave': slave,
-                'slave_dim': len(slave)//cc_src['slave_size'] if cc_src['slave_size'] else 0,
-                'properties': {
-                    key:cc_src[key] for key in cc_src
-                    if key not in [
-                        'id','name','type',
-                        'master','master_size',
-                        'slave','slave_size',
-                    ]}
-            })
+            self.coupling_constraints.append(FCConstraint(cc_src))
 
 
     def _encode_coupling_constraints(self, output_data):
         if self.coupling_constraints:
             output_data['coupling_constraints'] = []
-
             for cc in self.coupling_constraints:
-                cc_src = {
-                    'id': cc['id'],
-                    'type': cc['type'],
-                    'name': cc['name'],
-                    'master': encode(cc['master']),
-                    'master_size': len(cc['master'])//cc['master_dim'] if cc['master_dim'] else 0,
-                    'slave': encode(cc['slave']),
-                    'slave_size': len(cc['slave'])//cc['slave_dim'] if cc['slave_dim'] else 0,
-                }
-                for key in cc['properties']:
-                    cc_src[key] = cc['properties'][key]
-
-                output_data['coupling_constraints'].append(cc_src)
+                output_data['coupling_constraints'].append(cc.dump())
 
 
     def _decode_periodic_constraints(self, input_data):
 
         for cc_src in input_data.get('periodic_constraints', []):
-            master = decode(cc_src['master'], dtype(int32))
-            slave = decode(cc_src['slave'], dtype(int32))
-
-            self.periodic_constraints.append({
-                'id': cc_src['id'],
-                'name': cc_src['name'],
-                'type': cc_src['type'],
-                'master': master,
-                'master_dim': len(master)//cc_src['master_size'] if cc_src['master_size'] else 0,
-                'slave': slave,
-                'slave_dim': len(slave)//cc_src['slave_size'] if cc_src['slave_size'] else 0,
-                'properties': {
-                    key:cc_src[key] for key in cc_src
-                    if key not in [
-                        'id','name','type',
-                        'master','master_size',
-                        'slave','slave_size',
-                    ]}
-            })
+            self.periodic_constraints.append(FCConstraint(cc_src))
 
 
     def _encode_periodic_constraints(self, output_data):
@@ -541,180 +457,107 @@ class FCModel:
             output_data['periodic_constraints'] = []
 
             for cc in self.periodic_constraints:
-                cc_src = {
-                    'id': cc['id'],
-                    'type': cc['type'],
-                    'name': cc['name'],
-                    'master': encode(cc['master']),
-                    'master_size': len(cc['master'])//cc['master_dim'] if cc['master_dim'] else 0,
-                    'slave': encode(cc['slave']),
-                    'slave_size': len(cc['slave'])//cc['slave_dim'] if cc['slave_dim'] else 0,
-                }
-                for key in cc['properties']:
-                    cc_src[key] = cc['properties'][key]
-
-                output_data['periodic_constraints'].append(cc_src)
+                output_data['periodic_constraints'].append(cc.dump())
 
 
     def _decode_sets(self, src_data):
-
         if 'sets' in src_data:
-
-            for nodeset_src in src_data['sets'].get('nodesets', []):
-                self.nodesets[nodeset_src['id']] = {
-                    'id': nodeset_src['id'],
-                    'name': nodeset_src['name'],
-                    'apply_to': decode(nodeset_src['apply_to'], dtype(int32))
-                }
-
-            for sideset_src in src_data['sets'].get('sidesets', []):
-                self.sidesets[sideset_src['id']] = {
-                    'id': sideset_src['id'],
-                    'name': sideset_src['name'],
-                    'apply_to': decode(sideset_src['apply_to'], dtype(int32)),
-                }
+            self.nodesets = {}
+            for ns_src in src_data['sets'].get('nodesets', []):
+                ns = FCSet(ns_src)
+                self.nodesets[ns.id] = ns
+            self.sidesets = {}
+            for ss_src in src_data['sets'].get('sidesets', []):
+                ss = FCSet(ss_src)
+                self.sidesets[ss.id] = ss
 
 
     def _encode_sets(self,  src_data):
-
         if not (self.nodesets or self.sidesets):
             return
-
         src_data['sets'] = {}
-
         if self.nodesets:
-            src_data['sets']['nodesets'] = [{
-                'id': nodeset['id'],
-                'name': nodeset['name'],
-                'apply_to': encode(nodeset['apply_to']),
-                'apply_to_size': len(nodeset['apply_to']),
-            } for nodeset in self.nodesets]
-
+            src_data['sets']['nodesets'] = [ns.dump() for ns in self.nodesets.values()]
         if self.sidesets:
-            src_data['sets']['sidesets'] = [{
-                'id': sideset['id'],
-                'name': sideset['name'],
-                'apply_to': encode(sideset['apply_to']),
-                'apply_to_size': len(sideset['apply_to'])//2,
-            } for sideset in self.sidesets]
+            src_data['sets']['sidesets'] = [ss.dump() for ss in self.sidesets.values()]
 
 
     def _decode_mesh(self, src_data):
         self.mesh.decode(src_data['mesh'])
 
     def _encode_mesh(self, src_data):
-        src_data['mesh'] = self.mesh.decode()
+        src_data['mesh'] = self.mesh.encode()
 
 
     def _decode_settings(self, src_data):
         self.settings = src_data.get('settings')
 
-
     def _encode_settings(self, src_data):
-        settings = self.settings
-        src_data['settings'] = settings
-
+        src_data['settings'] = self.settings
 
     def _decode_property_tables(self, src_data):
-        for property_table in src_data.get('property_tables', []):
-            self.property_tables[property_table['id']] = {
-                'id': property_table['id'],
-                'type': property_table['type'],
-                'properties': property_table['properties'],
-                'additional_properties': {key:property_table[key] for key in property_table if key not in ['id', 'type', 'properties']},
-            }
-
+        self.property_tables = {}
+        for pt_src in src_data.get('property_tables', []):
+            pt = FCPropertyTable(pt_src)
+            self.property_tables[pt.id] = pt
 
     def _encode_property_tables(self, src_data):
         if self.property_tables:
-            src_data['property_tables'] = [{
-                'id': value['id'],
-                'type': value['type'],
-                'properties': value['properties'],
-                **value['additional_properties']
-            } for value in self.property_tables]
+            src_data['property_tables'] = [pt.dump() for pt in self.property_tables.values()]
 
 
     def _decode_materials(self, src_data):
-
-        for material_src in src_data.get('materials', []):
-            material = FCMaterial(material_src)
-            self.materials[material.id] = material
+        self.materials = {}
+        for mat_src in src_data.get('materials', []):
+            mat = FCMaterial(mat_src)
+            self.materials[mat.id] = mat
 
 
     def _encode_materials(self, src_data):
-
         if self.materials:
-            src_data['materials'] = [material.dump() for material in self.materials]
+            src_data['materials'] = [mat.dump() for mat in self.materials.values()]
 
 
-    def _decode_loads(self, src_data):
-
-        for restraint_src in src_data.get('restraints', []):
-
-            restraint = FCRestraint(restraint_src)
-            self.restraints[restraint.id] = restraint
+    def _decode_loads(self, input_data):
+        for src_load in input_data.get('loads', []):
+            self.loads.append(FCLoad(src_load))
 
 
-    def _encode_loads(self, src_data):
+    def _encode_loads(self, output_data):
+        if self.loads:
+            output_data['loads'] = []
+            for cc in self.loads:
+                output_data['loads'].append(cc.dump())
 
+    def _decode_restraints(self, input_data):
+        for src_restraint in input_data.get('restraints', []):
+            self.restraints.append(FCRestraint(src_restraint))
+
+    def _encode_restraints(self, output_data):
         if self.restraints:
-            src_data['restraints'] = [restraint.dump() for restraint in self.restraints]
+            output_data['restraints'] = []
+            for restraint in self.restraints:
+                output_data['restraints'].append(restraint.dump())
 
+    def _decode_initial_sets(self, input_data):
+        for src_initial_set in input_data.get('initial_sets', []):
+            self.initial_sets.append(FCInitialSet(src_initial_set))
 
-    def _decode_restraints(self, src_data):
-
-        for restraint_src in src_data.get('restraints', []):
-
-            restraint = FCRestraint(restraint_src)
-            self.restraints[restraint.id] = restraint
-
-
-    def _encode_restraints(self, src_data):
-
-        if self.restraints:
-            src_data['restraints'] = [restraint.dump() for restraint in self.restraints]
-
-
-    def _decode_initial_sets(self, src_data):
-
-        for initial_set_src in src_data.get('initial_sets', []):
-            initial_set = FCInitialSet(initial_set_src)
-            self.initial_sets[initial_set.id] = initial_set
-
-
-    def _encode_initial_sets(self, src_data):
-
+    def _encode_initial_sets(self, output_data):
         if self.initial_sets:
-            src_data['initial_sets'] = [initial_set.dump() for initial_set in self.initial_sets]
+            output_data['initial_sets'] = []
+            for initial_set in self.initial_sets:
+                output_data['initial_sets'].append(initial_set.dump())
 
+    def _decode_receivers(self, input_data):
+        for src_receiver in input_data.get('receivers', []):
+            self.receivers.append(FCReceiver(src_receiver))
 
-    def _decode_receivers(self, src_data):
-
-        for r in src_data.get('receivers', []):
-            receiver: FCReceiver = {
-                'apply_to': fdecode(r['apply_to']),
-                'dofs': r['dofs'],
-                "id": r['id'],
-                "name": r['name'],
-                "type": r['type']
-            }
-            assert len(receiver['apply_to']) == r['apply_to_size']
-
-            self.receivers.append(receiver)
-
-
-    def _encode_receivers(self, src_data):
-
+    def _encode_receivers(self, output_data):
         if self.receivers:
-            src_data['receivers'] = [{
-                'apply_to': fencode(r['apply_to']),
-                'apply_to_size': len(r['apply_to']),
-                'dofs': r['dofs'],
-                "id": r['id'],
-                "name": r['name'],
-                "type": r['type']
-            } for r in self.receivers]
+            output_data['receivers'] = []
+            for receiver in self.receivers:
+                output_data['receivers'].append(receiver.dump())
 
 
 
@@ -727,4 +570,4 @@ if __name__ == '__main__':
 
     fc_model = FCModel(inputpath)
 
-    fc_model.dump(outputpath)
+    fc_model.save(outputpath)  # ОШИБКА: Метод dump() не принимает аргументы

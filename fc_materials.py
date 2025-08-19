@@ -275,32 +275,34 @@ class FCMaterial(FCSrcRequiredId[SrcFCMaterial]):
     def __init__(self, src_material:SrcFCMaterial):
         self.id = src_material['id']
         self.name = src_material['name']
+        self.properties: Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]] = {}
 
-        for property_group in src_material['properties']:
-            src_properties = src_material['properties'][property_group]
-    
-            if not property_group in self.properties:
+        src_props_grouped = src_material.get('properties', {})
+        for property_group in src_props_grouped:
+            src_properties = src_props_grouped[property_group]
+
+            if property_group not in self.properties:
                 self.properties[property_group] = []
 
             for src_property in src_properties:
-                for i, constants in enumerate(src_property["constants"]):
+                for i, constants in enumerate(src_property.get("constants", [])):
 
-                    type_code = src_property["type"]
+                    type_code = src_property.get("type", 0)
                     type_key = MATERIAL_PROPERTY_TYPES_KEYS[property_group][type_code]
                     name_code = src_property["const_names"][i]
                     name_key = MATERIAL_PROPERTY_NAMES_KEYS[property_group][name_code]
 
-                    property = FCMaterialProperty(
+                    prop = FCMaterialProperty(
                         name=name_key,
                         type=type_key,
                         data=FCData(
-                            constants, 
+                            constants,
                             src_property["const_types"][i],
                             src_property["const_dep"][i]
                         )
                     )
 
-                    self.properties[property_group].append(property)
+                    self.properties[property_group].append(prop)
 
 
     def dump(self) -> SrcFCMaterial:

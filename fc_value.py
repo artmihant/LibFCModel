@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 
 
 def isBase64(sb):
-    """Проверяет, является ли строка base64."""
+    """Проверяет, является ли строка корректной base64 (строгая проверка)."""
     if sb == 'all':
         return False
     try:
@@ -17,8 +17,14 @@ def isBase64(sb):
             sb_bytes = sb
         else:
             raise ValueError("Argument must be string or bytes")
-        return b64encode(b64decode(sb_bytes)) == sb_bytes
-    except (TypeError, binascii.Error):
+
+        # Длина base64 строки должна быть кратна 4
+        if len(sb_bytes) % 4 != 0:
+            return False
+
+        decoded = b64decode(sb_bytes, validate=True)
+        return b64encode(decoded) == sb_bytes
+    except (TypeError, binascii.Error, ValueError):
         return False
 
 
@@ -26,29 +32,46 @@ def decode(src: str, dtype:np.dtype = np.dtype('int32')) -> NDArray:
     """Декодирует строку base64 в numpy массив с заданным типом данных."""
     if src == '':
         return np.array([], dtype=dtype) 
-    return np.frombuffer(b64decode(src), dtype)
+    data = b64decode(src, validate=True)
+    return np.frombuffer(data, dtype)
 
 
 def encode(data: np.ndarray) -> str:
     """Кодирует numpy массив в строку base64."""
     return b64encode(data.tobytes()).decode()
 
-
+FC_VALUE_TYPE = Literal['formula', 'array', 'null']
 
 class FCValue:
 
-    type: Literal['formula', 'array', 'null'] = 'null'
+    type: FC_VALUE_TYPE = 'null'
     data: Union[np.ndarray, str]
 
-    def __init__(self, src_data: str, size: int, dtype:np.dtype = np.dtype('int32')):
+    def __init__(self, src_data: str, dtype:np.dtype = np.dtype('int32'), value_type: FC_VALUE_TYPE='array'):
 
-        if src_data == '':
+        if value_type == 'array':
+
+            if src_data == '':
+                self.data = np.array([], dtype=dtype)
+                self.type = 'null'
+            elif isBase64(src_data):
+                # Строгое распознавание base64 прошло — дополнительно проверим кратность буфера типу
+                raw = b64decode(src_data, validate=True)
+                if len(raw) % dtype.itemsize != 0:
+                    # Не соответствует типу — трактуем как формулу
+                    self.data = src_data
+                    self.type = 'formula'
+                else:
+                    self.data = np.frombuffer(raw, dtype)
+                    self.type = 'array'
+            else:
+                self.data = src_data
+                self.type = 'formula'
+
+        elif value_type == 'null':
             self.data = np.array([], dtype=dtype)
             self.type = 'null'
-        if isBase64(src_data):
-            self.data = decode(src_data, dtype).reshape(size, -1)
-            self.type = 'array'
-        else:
+        elif value_type == 'formula':
             self.data = src_data
             self.type = 'formula'
 

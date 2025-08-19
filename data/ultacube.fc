@@ -11,22 +11,21 @@
    "contact_constraints" : 
    [
       {
-         "id" : 1,
-         "master" : "BQAAAAUAAAAHAAAABQAAAAgAAAAFAAAABgAAAAUAAAA=",
-         "master_size" : 4,
-         "slave" : "AwAAAAAAAAABAAAAAAAAAAIAAAAAAAAABAAAAAAAAAA=",
-         "slave_size" : 4,
-         "name" : "Contact 1",
-         "type" : "tied"
-
          "detection_tolerance" : 0.10000000000000001,
          "distance" : 10.0,
+         "id" : 1,
          "ignore_tied_stiffness" : false,
+         "master" : "BQAAAAUAAAAHAAAABQAAAAgAAAAFAAAABgAAAAUAAAA=",
+         "master_size" : 4,
          "method" : "auto",
+         "name" : "Contact 1",
          "offset" : 0.0,
          "search_radius" : 1.0,
+         "slave" : "AwAAAAAAAAABAAAAAAAAAAIAAAAAAAAABAAAAAAAAAA=",
+         "slave_size" : 4,
          "thermo_penalty_mult" : 1.0,
          "tolerance" : 0.00050000000000000001,
+         "type" : "tied"
       }
    ],
    "coordinate_systems" : 
@@ -302,11 +301,7 @@
          "apply_to_size" : 4,
          "id" : 1,
          "name" : "absorption",
-         "type" : 19,
-         "data" : [],
-         "dep_var_num" : [],
-         "dep_var_size" : [],
-         "dependency_type" : [],
+         "type" : 19
       },
       {
          "apply_to" : "all",
@@ -894,7 +889,7 @@
          "data" : [ "AAAAAAAAIEA=", "", "" ],
          "dep_var_num" : [ "", "", "" ],
          "dep_var_size" : [ 0, 0, 0 ],
-         "dependency_type" : [ 0, "", "" ],
+         "dependency_type" : [ 0, 0, 0 ],
          "flag" : [ 15, 0, 0 ],
          "id" : 1,
          "name" : "angular velocity"
