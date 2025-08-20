@@ -5,9 +5,15 @@ from numpy.typing import NDArray
 
 from numpy import dtype, int32, int64, float64
 
+from fc_blocks import FCBlock
+from fc_constraint import FCConstraint
+from fc_coordinate_system import FCCoordinateSystem
 from fc_mesh import FCMesh
 from fc_materials import FCMaterial
 from fc_conditions import FCLoad, FCInitialSet, FCRestraint
+from fc_property_tables import FCPropertyTable
+from fc_receivers import FCReceiver
+from fc_set import FCSet
 from fc_value import FCValue, decode, encode
 
 
