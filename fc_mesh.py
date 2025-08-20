@@ -737,7 +737,7 @@ class FCMesh:
         elem_blocks = decode(src_mesh['elem_blocks'])
         elem_orders = decode(src_mesh['elem_orders'])
         elem_parent_ids = decode(src_mesh['elem_parent_ids'])
-        elem_types = decode(src_mesh['elem_types'], np.dtype('int8'))
+        elem_types = decode(src_mesh['elem_types'], np.dtype('uint8'))
         elem_ids = decode(src_mesh['elemids'])
         elem_nodes = decode(src_mesh['elems'])
 

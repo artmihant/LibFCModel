@@ -1,11 +1,7 @@
 # Material property type codes per group
 from typing import Dict, List, Literal, TypedDict, Union
 
-from numpy import dtype, float64
-from numpy.typing import NDArray
-
 from fc_dict import FCSrcRequiredId
-from fc_value import FCValue
 from fc_data import FCData
 
 

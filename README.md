@@ -1,4 +1,6 @@
-# Строго типизированная объектная модель для формата Fidesys Case (.fc) FCModel #
+# FCModel #
+
+Строго типизированная объектная модель для формата Fidesys Case (.fc)
 
 Библиотека FCModel предназначена для извлечения и записи данных из файлов FidesysCase (fc) формата.
 
@@ -31,10 +33,5 @@ fc_model.save(outputpath)
 
 ## Посткриптум ##
 
-Если вы заметили ошибку, телеграмируйте @artmihant.
-
-## Cсылки на материалы ##
-
-1. ./src/FidesysCase.html
-2. file:///CAE-Fidesys/preprocessor/bin/help/fidesyshelp.htm
+Если вы заметили ошибку, пишите на почту antonov@cae-fidesys.com
 

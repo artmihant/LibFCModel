@@ -201,6 +201,7 @@ class FCReceiver(FCSrcRequiredId[FCSrcReceiver]):
 
     def __init__(self, src_data: FCSrcReceiver):
         self.apply = FCValue(src_data['apply_to'], dtype(int32))
+        self.apply.resize(src_data['apply_to_size'])
         self.id = src_data['id']
         self.name = src_data['name']
         self.dofs = src_data['dofs']
@@ -303,7 +304,7 @@ class FCModel:
     nodesets: Dict[int, FCSet]
     sidesets: Dict[int, FCSet]
 
-    settings: dict = {}
+    settings: dict
 
 
     def __init__(self, filepath=None):
@@ -337,6 +338,8 @@ class FCModel:
 
         self.nodesets = {}
         self.sidesets = {}
+
+        self.settings = {}
 
         if filepath:
             with open(filepath, "r") as f:
@@ -560,15 +563,3 @@ class FCModel:
             for receiver in self.receivers:
                 output_data['receivers'].append(receiver.dump())
 
-
-
-if __name__ == '__main__':
-    name = "ultacube"
-    datapath = "/home/antonov/Base/Libs/FCModel/data/"
-
-    inputpath = os.path.join(datapath, f"{name}.fc")
-    outputpath = os.path.join(datapath, f"{name}_roundtrip.fc")
-
-    fc_model = FCModel(inputpath)
-
-    fc_model.save(outputpath)  # ОШИБКА: Метод dump() не принимает аргументы
