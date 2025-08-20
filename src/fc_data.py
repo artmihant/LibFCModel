@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from fc_value import FCValue
 
 # Dependency types (FCData)
-DEPENDENCY_TYPES: Dict[int, str] = {
+FC_DEPENDENCY_TYPES_KEYS: Dict[int, str] = {
     0: "CONSTANT",
     1: "TABULAR_X",
     2: "TABULAR_Y",
@@ -22,7 +22,7 @@ DEPENDENCY_TYPES: Dict[int, str] = {
     12: "TABULAR_MODE_ID",
 }
 
-DEPENDENCY_TYPES_R: Dict[str, int] = {v: k for k, v in DEPENDENCY_TYPES.items()}
+FC_DEPENDENCY_TYPES_CODES: Dict[str, int] = {v: k for k, v in FC_DEPENDENCY_TYPES_KEYS.items()}
 
 
 class FCDependencyColumn:
@@ -51,7 +51,7 @@ class FCData:
             if len(dep_type) != len(dep_data):
                 raise ValueError("FCData: dep_type and dep_data lists must have equal lengths")
             self.table = [FCDependencyColumn(
-                type = DEPENDENCY_TYPES[deps_type],
+                type = FC_DEPENDENCY_TYPES_KEYS[deps_type],
                 value = FCValue(dep_data[j], dtype(float64))
             ) for j, deps_type in enumerate(dep_type)]
 
@@ -64,7 +64,7 @@ class FCData:
 
     def dump(self) -> Union[Tuple[str, List[int], List[str]], Tuple[str, Union[int, str], str]]:
         if self.type == -1:
-            return self.value.dump(), [DEPENDENCY_TYPES_R[deps.type] for deps in self.table], [deps.value.dump() for deps in self.table]
+            return self.value.dump(), [FC_DEPENDENCY_TYPES_CODES[deps.type] for deps in self.table], [deps.value.dump() for deps in self.table]
         else:
             return self.value.dump(), self.type, ""
 

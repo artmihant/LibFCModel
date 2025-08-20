@@ -4,7 +4,7 @@ from typing import Dict, List, Literal, TypedDict, Union
 from fc_data import FCData
 
 
-FCMaterialPropertiesTypes = Literal[
+FCMaterialPropertiesTypeLiteral = Literal[
     "elasticity", # Упругость и вязкоупругость
     "common", # Общие свойства
     "thermal",  # Температурные свойства
@@ -18,7 +18,7 @@ FCMaterialPropertiesTypes = Literal[
 ]
 
 
-MATERIAL_PROPERTY_NAMES_KEYS: Dict[FCMaterialPropertiesTypes, Dict[Union[str, int], Union[str, int]]] = {
+FC_MATERIAL_PROPERTY_NAMES_KEYS: Dict[FCMaterialPropertiesTypeLiteral, Dict[Union[str, int], Union[str, int]]] = {
     "elasticity": {
         0: "YOUNG_MODULE",         # HOOK
         1: "POISSON_RATIO",        # HOOK
@@ -199,11 +199,11 @@ MATERIAL_PROPERTY_NAMES_KEYS: Dict[FCMaterialPropertiesTypes, Dict[Union[str, in
     "swelling": {}
 }
 
-MATERIAL_PROPERTY_NAMES_CODES: Dict[FCMaterialPropertiesTypes, Dict[Union[str, int], Union[str, int]]] = {
-    group: {key: code for code, key in mapping.items()} for group, mapping in MATERIAL_PROPERTY_NAMES_KEYS.items()
+FC_MATERIAL_PROPERTY_NAMES_CODES: Dict[FCMaterialPropertiesTypeLiteral, Dict[Union[str, int], Union[str, int]]] = {
+    group: {key: code for code, key in mapping.items()} for group, mapping in FC_MATERIAL_PROPERTY_NAMES_KEYS.items()
 }
 
-MATERIAL_PROPERTY_TYPES_KEYS: Dict[FCMaterialPropertiesTypes, Dict[Union[str, int], Union[str, int]]] = {
+FC_MATERIAL_PROPERTY_TYPES_KEYS: Dict[FCMaterialPropertiesTypeLiteral, Dict[Union[str, int], Union[str, int]]] = {
     "elasticity": {
         0: "HOOK",
         1: "HOOK_ORTHOTROPIC",
@@ -229,8 +229,8 @@ MATERIAL_PROPERTY_TYPES_KEYS: Dict[FCMaterialPropertiesTypes, Dict[Union[str, in
     "swelling": {}
 }
 
-MATERIAL_PROPERTY_TYPES_CODES: Dict[FCMaterialPropertiesTypes, Dict[Union[str, int], Union[str, int]]] = {
-    group: {name: code for code, name in mapping.items()} for group, mapping in MATERIAL_PROPERTY_TYPES_KEYS.items()
+FC_MATERIAL_PROPERTY_TYPES_CODES: Dict[FCMaterialPropertiesTypeLiteral, Dict[Union[str, int], Union[str, int]]] = {
+    group: {name: code for code, name in mapping.items()} for group, mapping in FC_MATERIAL_PROPERTY_TYPES_KEYS.items()
 }
 
 
@@ -292,17 +292,17 @@ class FCMaterial:
     """
     id: int  # Уникальный идентификатор материала
     name: str  # Имя материала
-    properties: Dict[FCMaterialPropertiesTypes, List[List[FCMaterialProperty]]]  # Словарь, где свойства сгруппированы по типам
+    properties: Dict[FCMaterialPropertiesTypeLiteral, List[List[FCMaterialProperty]]]  # Словарь, где свойства сгруппированы по типам
 
     def __init__(self, src_material:FCSrcMaterial):
         self.id = src_material['id']
         self.name = src_material['name']
-        self.properties: Dict[FCMaterialPropertiesTypes, List[List[FCMaterialProperty]]] = {}
+        self.properties: Dict[FCMaterialPropertiesTypeLiteral, List[List[FCMaterialProperty]]] = {}
 
         # Источник: только группы верхнего уровня из FCSrcMaterial
-        property_groups: Dict[FCMaterialPropertiesTypes, List[FCSrcMaterialProperty]] = {}
+        property_groups: Dict[FCMaterialPropertiesTypeLiteral, List[FCSrcMaterialProperty]] = {}
 
-        for property_group_name in MATERIAL_PROPERTY_NAMES_KEYS.keys():
+        for property_group_name in FC_MATERIAL_PROPERTY_NAMES_KEYS.keys():
             arr: List[FCSrcMaterialProperty] = src_material.get(property_group_name) # type: ignore
             if arr:
                 property_groups[property_group_name] = arr
@@ -311,7 +311,7 @@ class FCMaterial:
             self.properties[property_group_name] = [] 
             for src_property in src_properties:
                 type_code = src_property.get("type", 0)
-                type_key = MATERIAL_PROPERTY_TYPES_KEYS[property_group_name].get(type_code, type_code)  
+                type_key = FC_MATERIAL_PROPERTY_TYPES_KEYS[property_group_name].get(type_code, type_code)  
 
                 some_property_group: List[FCMaterialProperty] = []
 
@@ -320,7 +320,7 @@ class FCMaterial:
                 for i, constants in enumerate(src_property.get("constants", [])):
 
                     name_code = src_property["const_names"][i]
-                    name_key = MATERIAL_PROPERTY_NAMES_KEYS[property_group_name].get(name_code, name_code)  
+                    name_key = FC_MATERIAL_PROPERTY_NAMES_KEYS[property_group_name].get(name_code, name_code)  
 
                     prop = FCMaterialProperty(
                         name=name_key,
@@ -357,8 +357,8 @@ class FCMaterial:
 
                     constants, const_types, const_dep = property.data.dump()
 
-                    type_code = MATERIAL_PROPERTY_TYPES_CODES[property_group_name].get(property.type, property.type)
-                    name_code = MATERIAL_PROPERTY_NAMES_CODES[property_group_name].get(property.name, property.name)
+                    type_code = FC_MATERIAL_PROPERTY_TYPES_CODES[property_group_name].get(property.type, property.type)
+                    name_code = FC_MATERIAL_PROPERTY_NAMES_CODES[property_group_name].get(property.name, property.name)
 
                     src_some_property_group['type'] = int(type_code)
                     src_some_property_group['const_dep'].append(const_dep)

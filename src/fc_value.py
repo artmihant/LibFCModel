@@ -5,6 +5,7 @@ from typing import Literal, Tuple, Union
 import numpy as np
 from numpy.typing import NDArray
 
+FCValueTypeLiteral = Literal['formula', 'array', 'null']
 
 def isBase64(sb):
     """Проверяет, является ли строка корректной base64 (строгая проверка)."""
@@ -38,14 +39,13 @@ def encode(data: np.ndarray) -> str:
     """Кодирует numpy массив в строку base64."""
     return b64encode(data.tobytes()).decode()
 
-FC_VALUE_TYPE = Literal['formula', 'array', 'null']
 
 class FCValue:
 
-    type: FC_VALUE_TYPE = 'null'
+    type: FCValueTypeLiteral = 'null'
     data: Union[np.ndarray, str]
 
-    def __init__(self, src_data: str, dtype:np.dtype = np.dtype('int32'), value_type: FC_VALUE_TYPE='array'):
+    def __init__(self, src_data: str, dtype:np.dtype = np.dtype('int32'), value_type: FCValueTypeLiteral='array'):
 
         if value_type == 'array':
 

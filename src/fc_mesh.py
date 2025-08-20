@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 from fc_value import decode, encode
 
 
-FC_ELEMENT_TYPE_NAME = Literal[
+FCElementTypeLiteral = Literal[
     'NONE',
     'LUMPMASS3D',
     'LUMPMASS6D',
@@ -65,7 +65,7 @@ FC_ELEMENT_TYPE_NAME = Literal[
 
 
 class FCElementType(TypedDict):
-    name: FC_ELEMENT_TYPE_NAME 
+    name: FCElementTypeLiteral 
     fc_id: int 
     dim: int 
     order: int 
@@ -640,7 +640,7 @@ FC_ELEMENT_TYPES_KEYID: Dict[int, FCElementType] = {
     element_type['fc_id']:element_type for element_type in FC_ELEMENT_TYPES
 }
 
-FC_ELEMENT_TYPES_KEYNAME: Dict[FC_ELEMENT_TYPE_NAME, FCElementType] = {
+FC_ELEMENT_TYPES_KEYNAME: Dict[FCElementTypeLiteral, FCElementType] = {
     element_type['name']:element_type for element_type in FC_ELEMENT_TYPES
 }
 
@@ -649,7 +649,7 @@ class FCSrcElement(TypedDict):
     id: int
     block: int
     parent_id: int
-    type: FC_ELEMENT_TYPE_NAME
+    type: FCElementTypeLiteral
     nodes: List[int]
     order: int
 
@@ -661,7 +661,7 @@ class FCElement:
     id: int
     block: int
     parent_id: int
-    type: FC_ELEMENT_TYPE_NAME
+    type: FCElementTypeLiteral
     nodes: List[int]
     order: int
 
@@ -717,7 +717,7 @@ class FCMesh:
     nodes_ids: NDArray[np.int32]
     nodes_xyz: NDArray[np.float64]
 
-    elements: Dict[FC_ELEMENT_TYPE_NAME, Dict[int, FCElement]]
+    elements: Dict[FCElementTypeLiteral, Dict[int, FCElement]]
 
 
     def __init__(self):
@@ -864,7 +864,7 @@ class FCMesh:
         return False
 
 
-    def __getitem__(self, key:Union[int, FC_ELEMENT_TYPE_NAME]):
+    def __getitem__(self, key:Union[int, FCElementTypeLiteral]):
         if isinstance(key, str):
             return self.elements[key]
         elif isinstance(key, int):

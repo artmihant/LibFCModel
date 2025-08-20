@@ -4,7 +4,6 @@ from typing import Any, List
 
 from fc_model import FCModel
 
-
 def deep_diff(a: Any, b: Any, path: str = "$") -> List[str]:
     diffs: List[str] = []
 

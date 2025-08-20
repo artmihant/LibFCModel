@@ -6,7 +6,7 @@ from fc_data import FCData
 from fc_value import FCValue
 
 
-LOADS_TYPES_KEYS = {
+FC_LOADS_TYPES_KEYS = {
     # Нагрузки на грань
     1: 'FaceDeadStress',                    # Давление на грань
     3: 'FaceTrackingStress',                # Следящее давление на грань
@@ -54,10 +54,10 @@ LOADS_TYPES_KEYS = {
     44: 'VolumeGravityMassForce',           # Гравитация
 }
 
-LOADS_TYPES_CODES: Dict[str, int] = {code: key for key, code in LOADS_TYPES_KEYS.items()}
+FC_LOADS_TYPES_CODES: Dict[str, int] = {code: key for key, code in FC_LOADS_TYPES_KEYS.items()}
 
 
-RESTRAINT_FLAGS_KEYS = {
+FC_RESTRAINT_FLAGS_KEYS = {
     0: 'EmptyRestraint',            # Отсутствует закрепление. Применяется в массивах вместе с остальными вариантами.
     1: 'Displacement',              # ГУ по перемещениям и поворотам для узлов. Длина массива равна 6.
     2: 'Velocity',                  # ГУ по скоростям и скоростям поворотов для узлов. Длина массива равна 6
@@ -75,10 +75,10 @@ RESTRAINT_FLAGS_KEYS = {
     16: 'Fluence',                  # ГУ по флюенсу (дозе). Длина массива равна 1.
 }
 
-RESTRAINT_FLAGS_CODES: Dict[str, int] = {code: key for key, code in RESTRAINT_FLAGS_KEYS.items()}
+FC_RESTRAINT_FLAGS_CODES: Dict[str, int] = {code: key for key, code in FC_RESTRAINT_FLAGS_KEYS.items()}
 
 
-INITIAL_SET_TYPES_KEYS = {
+FC_INITIAL_SET_TYPES_KEYS = {
     0: "Displacement",
     1: "Velocity",
     2: "AngularVelocity",
@@ -86,7 +86,7 @@ INITIAL_SET_TYPES_KEYS = {
     4: "PorePressure"
 }
 
-INITIAL_SET_TYPES_CODES: Dict[str, int] = {code: key for key, code in INITIAL_SET_TYPES_KEYS.items()}
+FC_INITIAL_SET_TYPES_CODES: Dict[str, int] = {code: key for key, code in FC_INITIAL_SET_TYPES_KEYS.items()}
 
 
 class FCSrcLoadStrict(TypedDict):
@@ -157,7 +157,7 @@ class FCLoad:
             raise ValueError(
                 f"Load(id={self.id}) apply_to_size mismatch: {len(self.apply)} != {src_load.get('apply_to_size', 0)}"
             )
-        self.type = LOADS_TYPES_KEYS[src_load['type']]
+        self.type = FC_LOADS_TYPES_KEYS[src_load['type']]
         self.data: List[FCData] = []
 
         if 'data' in src_load:
@@ -182,7 +182,7 @@ class FCLoad:
         load_src: FCSrcLoad = {
             'id': self.id,
             'name': self.name,
-            'type': LOADS_TYPES_CODES[self.type],
+            'type': FC_LOADS_TYPES_CODES[self.type],
             'apply_to': self.apply.dump(),
             'apply_to_size': len(self.apply),
             'data': [],
@@ -245,7 +245,7 @@ class FCRestraint:
                 raise ValueError("dependency_type shorter than data components")
             if len(dep_vars_all) and len(dep_vars_all) < len(self.data):
                 raise ValueError("dep_var_num shorter than data components")
-        self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in src_restraint['flag']]
+        self.flags = [FC_RESTRAINT_FLAGS_KEYS[code] for code in src_restraint['flag']]
 
 
     def dump(self) -> FCSrcRestraint:
@@ -275,7 +275,7 @@ class FCRestraint:
             src_restraint['dep_var_num'].append(dep_vars)
             src_restraint['dep_var_size'].append(len(data))
 
-        src_restraint['flag'] = [RESTRAINT_FLAGS_CODES[key] for key in self.flags] 
+        src_restraint['flag'] = [FC_RESTRAINT_FLAGS_CODES[key] for key in self.flags] 
 
         return src_restraint
 
@@ -318,9 +318,9 @@ class FCInitialSet:
             if len(dep_vars_all) and len(dep_vars_all) < len(self.data):
                 raise ValueError("dep_var_num shorter than data components")
 
-        self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in src_initial_set['flag']]
+        self.flags = [FC_RESTRAINT_FLAGS_KEYS[code] for code in src_initial_set['flag']]
 
-        self.type = INITIAL_SET_TYPES_KEYS[src_initial_set['type']]
+        self.type = FC_INITIAL_SET_TYPES_KEYS[src_initial_set['type']]
 
     def dump(self) -> FCSrcInitialSet:
 
@@ -332,8 +332,8 @@ class FCInitialSet:
             'dependency_type': [],
             'dep_var_num': [],
             'dep_var_size': [],
-            'flag': [RESTRAINT_FLAGS_CODES[key] for key in self.flags],
-            'type': INITIAL_SET_TYPES_CODES[self.type]
+            'flag': [FC_RESTRAINT_FLAGS_CODES[key] for key in self.flags],
+            'type': FC_INITIAL_SET_TYPES_CODES[self.type]
         }
 
         if self.cs_id:

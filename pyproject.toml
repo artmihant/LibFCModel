@@ -27,6 +27,8 @@ dependencies = [
 Homepage = "https://pypi.org/project/fc-model/"
 
 [tool.setuptools]
+package-dir = { "" = "src" }
+# Если у вас модули как отдельные файлы в src/
 py-modules = [
   "fc_model",
   "fc_value",
@@ -39,3 +41,7 @@ py-modules = [
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
