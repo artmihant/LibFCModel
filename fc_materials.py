@@ -186,8 +186,8 @@ MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[Union[str, int], Union[str, int]]] 
     "strength": {
         0: "TENSILE_STRENGTH",              # ISOTROPIC
         1: "TENSILE_STRENGTH_COMPR",        # ISOTROPIC
-
     },
+    "swelling": {}
 }
 
 MATERIAL_PROPERTY_NAMES_CODES: Dict[str, Dict[Union[str, int], Union[str, int]]] = {
@@ -217,6 +217,7 @@ MATERIAL_PROPERTY_TYPES_KEYS: Dict[str, Dict[Union[str, int], Union[str, int]]] 
     "creep": {0: "NORTON"},
     "preload": {0: "INITIAL"},
     "strength": {0: "ISOTROPIC"},
+    "swelling": {}
 }
 
 MATERIAL_PROPERTY_TYPES_CODES: Dict[str, Dict[Union[str, int], Union[str, int]]] = {

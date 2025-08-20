@@ -435,11 +435,25 @@
          "elasticity" : 
          [
             {
-               "const_dep" : [ "", "" ],
-               "const_dep_size" : [ 0, 0 ],
+               "const_dep" : 
+               [
+                  [
+                     "AAAAAAAA8D8AAAAAAAAAQAAAAAAAAAhAAAAAAAAAEEAAAAAAAAAUQAAAAAAAABhAAAAAAAAAHEA="
+                  ],
+                  ""
+               ],
+               "const_dep_size" : [ 7, 0 ],
                "const_names" : [ 0, 1 ],
-               "const_types" : [ 0, 0 ],
-               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "const_types" : 
+               [
+                  [ 4 ],
+                  0
+               ],
+               "constants" : 
+               [
+                  "AAAAAAAA8D8AAAAAAAAAQAAAAAAAAAhAAAAAAAAAEEAAAAAAAAAUQAAAAAAAABhAAAAAAAAAHEA=",
+                  "AAAAAAAAAAA="
+               ],
                "type" : 0
             },
             {
