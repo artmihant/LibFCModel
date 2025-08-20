@@ -732,7 +732,20 @@ class FCMesh:
     def decode(self, src_mesh: FCSrcMesh):
 
         self.nodes_ids = decode(src_mesh['nids'], np.dtype('int32'))
-        self.nodes_xyz = decode(src_mesh['nodes'], np.dtype('float64')).reshape(-1, 3)
+        nodes_raw = decode(src_mesh['nodes'], np.dtype('float64'))
+        if nodes_raw.size % 3 != 0:
+            raise ValueError(f"mesh.nodes length must be divisible by 3, got {nodes_raw.size}")
+        self.nodes_xyz = nodes_raw.reshape(-1, 3)
+
+        # basic consistency: nodes_count must match ids/xyz lengths
+        if src_mesh['nodes_count'] != len(self.nodes_ids):
+            raise ValueError(
+                f"nodes_count mismatch: header {src_mesh['nodes_count']} vs decoded {len(self.nodes_ids)}"
+            )
+        if self.nodes_xyz.shape[0] != len(self.nodes_ids):
+            raise ValueError(
+                f"nodes xyz count mismatch: {self.nodes_xyz.shape[0]} rows vs {len(self.nodes_ids)} ids"
+            )
 
         elem_blocks = decode(src_mesh['elem_blocks'])
         elem_orders = decode(src_mesh['elem_orders'])
@@ -741,7 +754,24 @@ class FCMesh:
         elem_ids = decode(src_mesh['elemids'])
         elem_nodes = decode(src_mesh['elems'])
 
+        # basic consistency: elems_count must match arrays' lengths
+        elems_count = src_mesh['elems_count']
+        for name, arr in (
+            ("elemids", elem_ids),
+            ("elem_blocks", elem_blocks),
+            ("elem_orders", elem_orders),
+            ("elem_parent_ids", elem_parent_ids),
+            ("elem_types", elem_types),
+        ):
+            if len(arr) != elems_count:
+                raise ValueError(f"{name} length {len(arr)} != elems_count {elems_count}")
+
         elem_sizes = np.vectorize(lambda t: FC_ELEMENT_TYPES_KEYID[t]['nodes'])(elem_types)
+        total_nodes = int(np.sum(elem_sizes))
+        if len(elem_nodes) != total_nodes:
+            raise ValueError(
+                f"elems (flattened nodes) length {len(elem_nodes)} != expected {total_nodes} from elem_types"
+            )
         elem_offsets = [0, *np.cumsum(elem_sizes)]
 
         for i, eid in enumerate(elem_ids):
@@ -772,6 +802,14 @@ class FCMesh:
         elem_parent_ids: NDArray = np.zeros(elems_count, np.int32)
         elem_types: NDArray = np.zeros(elems_count, np.int8)
 
+        # basic consistency: nodes arrays
+        if self.nodes_xyz.ndim != 2 or self.nodes_xyz.shape[1] != 3:
+            raise ValueError("nodes must be a 2D array of shape (N,3)")
+        if len(self.nodes_ids) != self.nodes_xyz.shape[0]:
+            raise ValueError(
+                f"nodes ids length {len(self.nodes_ids)} != nodes xyz rows {self.nodes_xyz.shape[0]}"
+            )
+
         for i, elem in enumerate(self):
             elem_ids[i] = elem.id
             elem_blocks[i] = elem.block
@@ -779,7 +817,15 @@ class FCMesh:
             elem_orders[i] = elem.order
             elem_types[i] = FC_ELEMENT_TYPES_KEYNAME[elem.type]['fc_id']
 
+        # basic consistency: each element nodes count must match its type definition
+        expected_nodes_total = 0
+        for elem in self:
+            expected_nodes_total += FC_ELEMENT_TYPES_KEYNAME[elem.type]['nodes']
         elem_nodes: NDArray = np.array(self.nodes_list, np.int32)
+        if len(elem_nodes) != expected_nodes_total:
+            raise ValueError(
+                f"flattened nodes length {len(elem_nodes)} != expected {expected_nodes_total} from element types"
+            )
 
         src_mesh: FCSrcMesh = {
             "elem_blocks": encode(elem_blocks),

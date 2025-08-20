@@ -48,6 +48,8 @@ class FCData:
         if isinstance(dep_type, list) and isinstance(dep_data, list):
             self.value = FCValue(data, dtype(float64))
             self.type = -1
+            if len(dep_type) != len(dep_data):
+                raise ValueError("FCData: dep_type and dep_data lists must have equal lengths")
             self.table = [FCDependencyColumn(
                 type = DEPENDENCY_TYPES[deps_type],
                 value = FCValue(dep_data[j], dtype(float64))

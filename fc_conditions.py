@@ -153,6 +153,10 @@ class FCLoad:
 
         self.apply = FCValue(src_load['apply_to'], dtype('int32'))
         self.apply.resize(src_load.get('apply_to_size', 0))
+        if len(self.apply) != src_load.get('apply_to_size', 0):
+            raise ValueError(
+                f"Load(id={self.id}) apply_to_size mismatch: {len(self.apply)} != {src_load.get('apply_to_size', 0)}"
+            )
         self.type = LOADS_TYPES_KEYS[src_load['type']]
         self.data: List[FCData] = []
 
@@ -167,6 +171,11 @@ class FCLoad:
                     dep_type_i,
                     dep_var_i
                 ))
+            # consistency for dependency arrays lengths
+            if len(dep_types_all) and len(dep_types_all) < len(self.data):
+                raise ValueError("dependency_type shorter than data components")
+            if len(dep_vars_all) and len(dep_vars_all) < len(self.data):
+                raise ValueError("dep_var_num shorter than data components")
 
     def dump(self) -> FCSrcLoad:
 
@@ -214,6 +223,10 @@ class FCRestraint:
 
         self.apply = FCValue(src_restraint['apply_to'], dtype('int32'))
         self.apply.resize(src_restraint.get('apply_to_size', 0))
+        if len(self.apply) != src_restraint.get('apply_to_size', 0):
+            raise ValueError(
+                f"Restraint(id={self.id}) apply_to_size mismatch: {len(self.apply)} != {src_restraint.get('apply_to_size', 0)}"
+            )
 
         self.data: List[FCData] = []
 
@@ -228,6 +241,10 @@ class FCRestraint:
                     dep_type_i,
                     dep_var_i
                 ))
+            if len(dep_types_all) and len(dep_types_all) < len(self.data):
+                raise ValueError("dependency_type shorter than data components")
+            if len(dep_vars_all) and len(dep_vars_all) < len(self.data):
+                raise ValueError("dep_var_num shorter than data components")
         self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in src_restraint['flag']]
 
 
@@ -278,6 +295,10 @@ class FCInitialSet:
 
         self.apply = FCValue(src_initial_set['apply_to'], dtype('int32'))
         self.apply.resize(src_initial_set.get('apply_to_size', 0))
+        if len(self.apply) != src_initial_set.get('apply_to_size', 0):
+            raise ValueError(
+                f"InitialSet(id={self.id}) apply_to_size mismatch: {len(self.apply)} != {src_initial_set.get('apply_to_size', 0)}"
+            )
         
         self.data: List[FCData] = []
 
@@ -292,6 +313,10 @@ class FCInitialSet:
                     dep_type_i,
                     dep_var_i
                 ))
+            if len(dep_types_all) and len(dep_types_all) < len(self.data):
+                raise ValueError("dependency_type shorter than data components")
+            if len(dep_vars_all) and len(dep_vars_all) < len(self.data):
+                raise ValueError("dep_var_num shorter than data components")
 
         self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in src_initial_set['flag']]
 
