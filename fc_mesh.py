@@ -689,7 +689,7 @@ class FCElement(FCSrcRequiredId):
         }
 
 
-class SrcFCMesh(TypedDict):
+class FCSrcMesh(TypedDict):
     elem_blocks: str
     elem_orders: str
     elem_parent_ids: str
@@ -729,7 +729,7 @@ class FCMesh:
         self.elements = {}
 
 
-    def decode(self, src_mesh: SrcFCMesh):
+    def decode(self, src_mesh: FCSrcMesh):
 
         self.nodes_ids = decode(src_mesh['nids'], np.dtype('int32'))
         self.nodes_xyz = decode(src_mesh['nodes'], np.dtype('float64')).reshape(-1, 3)
@@ -762,7 +762,7 @@ class FCMesh:
             self.elements[fc_type_name][eid] = element
 
 
-    def encode(self) -> SrcFCMesh:
+    def encode(self) -> FCSrcMesh:
 
         elems_count = len(self)
 
@@ -781,7 +781,7 @@ class FCMesh:
 
         elem_nodes: NDArray = np.array(self.nodes_list, np.int32)
 
-        src_mesh: SrcFCMesh = {
+        src_mesh: FCSrcMesh = {
             "elem_blocks": encode(elem_blocks),
             "elem_orders": encode(elem_orders),
             "elem_parent_ids": encode(elem_parent_ids),

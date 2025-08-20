@@ -8,8 +8,6 @@ from numpy.typing import NDArray
 
 def isBase64(sb):
     """Проверяет, является ли строка корректной base64 (строгая проверка)."""
-    if sb == 'all':
-        return False
     try:
         if isinstance(sb, str):
             sb_bytes = bytes(sb, 'ascii')

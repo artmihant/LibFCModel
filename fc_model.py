@@ -169,7 +169,8 @@ class FCSet(FCSrcRequiredId[FCSrcSet]):
     name: str
 
     def __init__(self, src_data: FCSrcSet):
-        self.apply = FCValue(src_data['apply_to'], dtype(int64))
+        self.apply = FCValue(src_data['apply_to'], dtype(int32))
+        self.apply.resize(src_data['apply_to_size'])
         self.id = src_data['id']
         self.name = src_data['name']
 
@@ -508,9 +509,9 @@ class FCModel:
 
     def _decode_materials(self, src_data):
         self.materials = {}
-        for mat_src in src_data.get('materials', []):
-            mat = FCMaterial(mat_src)
-            self.materials[mat.id] = mat
+        for src_material in src_data.get('materials', []):
+            material = FCMaterial(src_material)
+            self.materials[material.id] = material
 
 
     def _encode_materials(self, src_data):
@@ -526,8 +527,8 @@ class FCModel:
     def _encode_loads(self, output_data):
         if self.loads:
             output_data['loads'] = []
-            for cc in self.loads:
-                output_data['loads'].append(cc.dump())
+            for load in self.loads:
+                output_data['loads'].append(load.dump())
 
     def _decode_restraints(self, input_data):
         for src_restraint in input_data.get('restraints', []):
@@ -562,11 +563,11 @@ class FCModel:
 
 
 if __name__ == '__main__':
-    name = "profile_model_local"
-    datapath = "/home/antonov/Base/Coworks/CoworkMilenteva/"
+    name = "ultacube"
+    datapath = "/home/antonov/Base/Libs/FCModel/data/"
 
     inputpath = os.path.join(datapath, f"{name}.fc")
-    outputpath = os.path.join(datapath, f"{name}_new.fc")
+    outputpath = os.path.join(datapath, f"{name}_roundtrip.fc")
 
     fc_model = FCModel(inputpath)
 

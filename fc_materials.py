@@ -9,7 +9,7 @@ from fc_value import FCValue
 from fc_data import FCData
 
 
-MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[int, str]] = {
+MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[Union[str, int], Union[str, int]]] = {
     "elasticity": {
         0: "YOUNG_MODULE",         # HOOK
         1: "POISSON_RATIO",        # HOOK
@@ -36,6 +36,8 @@ MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[int, str]] = {
         27: "C1",                  # COMPR_MOONEY
         28: "C2",                  # COMPR_MOONEY
         29: "D",                   # COMPR_MOONEY
+        79: "VP",                  # HOOK
+        80: "VS",                  # HOOK
         82: "C_1111",              # ANISOTROPIC
         83: "C_1112",              # ANISOTROPIC
         84: "C_1113",              # ANISOTROPIC
@@ -184,14 +186,15 @@ MATERIAL_PROPERTY_NAMES_KEYS: Dict[str, Dict[int, str]] = {
     "strength": {
         0: "TENSILE_STRENGTH",              # ISOTROPIC
         1: "TENSILE_STRENGTH_COMPR",        # ISOTROPIC
+
     },
 }
 
-MATERIAL_PROPERTY_NAMES_CODES: Dict[str, Dict[str, int]] = {
+MATERIAL_PROPERTY_NAMES_CODES: Dict[str, Dict[Union[str, int], Union[str, int]]] = {
     group: {key: code for code, key in mapping.items()} for group, mapping in MATERIAL_PROPERTY_NAMES_KEYS.items()
 }
 
-MATERIAL_PROPERTY_TYPES_KEYS: Dict[str, Dict[int, str]] = {
+MATERIAL_PROPERTY_TYPES_KEYS: Dict[str, Dict[Union[str, int], Union[str, int]]] = {
     "elasticity": {
         0: "HOOK",
         1: "HOOK_ORTHOTROPIC",
@@ -216,23 +219,32 @@ MATERIAL_PROPERTY_TYPES_KEYS: Dict[str, Dict[int, str]] = {
     "strength": {0: "ISOTROPIC"},
 }
 
-MATERIAL_PROPERTY_TYPES_CODES: Dict[str, Dict[str, int]] = {
+MATERIAL_PROPERTY_TYPES_CODES: Dict[str, Dict[Union[str, int], Union[str, int]]] = {
     group: {name: code for code, name in mapping.items()} for group, mapping in MATERIAL_PROPERTY_TYPES_KEYS.items()
 }
+
+
+class FCSrcMaterialProperty(TypedDict):
+    const_dep: List[Union[str, List[str]]]
+    const_dep_size: List[int]
+    const_names: List[Union[int, str]]
+    const_types: List[Union[int, str, List[int]]]
+    constants: List[str]
+    type: Union[int, str]
 
 
 class FCMaterialProperty:
     """
     Определяет одно физическое свойство материала (e.g., плотность, модуль Юнга).
     """
-    type: str  # Берется из MATERIAL_PROPERTY_TYPES
-    name: str  # Берется из CONST_NAME_MAP
+    type: Union[str, int]   # Берется из MATERIAL_PROPERTY_TYPES
+    name: Union[str, int]  # Берется из CONST_NAME_MAP
     data: FCData  # Описание зависимости свойства
 
     def __init__(
         self,
-        type: str,
-        name: str,
+        type: Union[str, int],
+        name: Union[str, int],
         data: FCData
     ):
         """
@@ -258,13 +270,24 @@ FCMaterialPropertiesTypes = Literal[
     "strength" # Прочность
 ]
 
-class SrcFCMaterial(TypedDict):
+class FCSrcMaterialBase(TypedDict):
     id: int
     name: str
-    properties: Dict[FCMaterialPropertiesTypes, List[dict]]
 
 
-class FCMaterial(FCSrcRequiredId[SrcFCMaterial]):
+class FCSrcMaterial(FCSrcMaterialBase, total=False):
+    common: List[FCSrcMaterialProperty]
+    elasticity: List[FCSrcMaterialProperty]
+    geomechanic: List[FCSrcMaterialProperty]
+    plasticity: List[FCSrcMaterialProperty]
+    hardening: List[FCSrcMaterialProperty]
+    creep: List[FCSrcMaterialProperty]
+    preload: List[FCSrcMaterialProperty]
+    strength: List[FCSrcMaterialProperty]
+    thermal: List[FCSrcMaterialProperty]
+
+
+class FCMaterial(FCSrcRequiredId[FCSrcMaterial]):
     """
     Определяет материал и набор его физических свойств.
     """
@@ -272,25 +295,29 @@ class FCMaterial(FCSrcRequiredId[SrcFCMaterial]):
     name: str  # Имя материала
     properties: Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]]  # Словарь, где свойства сгруппированы по типам
 
-    def __init__(self, src_material:SrcFCMaterial):
+    def __init__(self, src_material:FCSrcMaterial):
         self.id = src_material['id']
         self.name = src_material['name']
         self.properties: Dict[FCMaterialPropertiesTypes, List[FCMaterialProperty]] = {}
 
-        src_props_grouped = src_material.get('properties', {})
-        for property_group in src_props_grouped:
-            src_properties = src_props_grouped[property_group]
+        # Источник: только группы верхнего уровня из FCSrcMaterial
+        property_groups: Dict[FCMaterialPropertiesTypes, List[FCSrcMaterialProperty]] = {}
 
-            if property_group not in self.properties:
-                self.properties[property_group] = []
+        for property_group_name in ("elasticity","common","thermal","geomechanic","plasticity","hardening","creep","preload","strength"):
+            arr: List[FCSrcMaterialProperty] = src_material.get(property_group_name) # type: ignore
+            if arr:
+                property_groups[property_group_name] = arr
 
+        for property_group_name, src_properties in property_groups.items():
+            self.properties[property_group_name] = [] 
             for src_property in src_properties:
+                type_code = src_property.get("type", 0)
+                type_key = MATERIAL_PROPERTY_TYPES_KEYS[property_group_name].get(type_code, type_code)  
+
                 for i, constants in enumerate(src_property.get("constants", [])):
 
-                    type_code = src_property.get("type", 0)
-                    type_key = MATERIAL_PROPERTY_TYPES_KEYS[property_group][type_code]
                     name_code = src_property["const_names"][i]
-                    name_key = MATERIAL_PROPERTY_NAMES_KEYS[property_group][name_code]
+                    name_key = MATERIAL_PROPERTY_NAMES_KEYS[property_group_name].get(name_code, name_code)  
 
                     prop = FCMaterialProperty(
                         name=name_key,
@@ -301,45 +328,52 @@ class FCMaterial(FCSrcRequiredId[SrcFCMaterial]):
                             src_property["const_dep"][i]
                         )
                     )
+                    self.properties[property_group_name].append(prop) 
 
-                    self.properties[property_group].append(prop)
+    def dump(self) -> FCSrcMaterial:
+        material_src: FCSrcMaterial = {"id": self.id, "name": self.name}
 
+        for property_group_name, property_group in self.properties.items():
 
-    def dump(self) -> SrcFCMaterial:
+            if property_group_name not in material_src:
+                material_src[property_group_name] = []
 
-        material_src: SrcFCMaterial = {
-            "id": self.id,
-            "name": self.name,
-            "properties": {}
-        }
-
-        property_groups = material_src['properties']
-
-        for property_group in self.properties:
-
-            if not property_group in property_groups:
-                property_groups[property_group] = []
-
-            for property in self.properties[property_group]:
+            for property in property_group:
 
                 constants, const_types, const_dep = property.data.dump()
 
-                type_key = property.type
-                type_code = MATERIAL_PROPERTY_TYPES_CODES[property_group][type_key]
-                name_key = property.name
-                name_code = MATERIAL_PROPERTY_NAMES_CODES[property_group][name_key]
+                type_code = MATERIAL_PROPERTY_TYPES_CODES[property_group_name].get(property.type, property.type)
+                name_code = MATERIAL_PROPERTY_NAMES_CODES[property_group_name].get(property.name, property.name)
 
-                src_material_property = {
+                src_material_property: FCSrcMaterialProperty = {
                     "const_dep": [const_dep],
                     "const_dep_size": [len(property.data)],
                     "const_names": [name_code],
                     "const_types": [const_types],
                     "constants": [constants],
-                    "type": type_code
+                    "type": int(type_code),
                 }
 
-                property_groups[property_group].append(src_material_property)
+                material_src[property_group_name].append(src_material_property) 
 
-                # TODO: Добавить слияние свойств
+            grouped_by_type: Dict[Union[int, str], FCSrcMaterialProperty] = {}
+            for prop in material_src[property_group_name]:
+                t = prop["type"]
+                if t not in grouped_by_type:
+                    grouped_by_type[t] = {
+                        "const_dep": [],
+                        "const_dep_size": [],
+                        "const_names": [],
+                        "const_types": [],
+                        "constants": [],
+                        "type": t
+                    }
+                grouped_by_type[t]["const_dep"].extend(prop["const_dep"])
+                grouped_by_type[t]["const_dep_size"].extend([prop["const_dep_size"][0]] if isinstance(prop["const_dep_size"], list) else [prop["const_dep_size"]])
+                grouped_by_type[t]["const_names"].extend(prop["const_names"])
+                grouped_by_type[t]["const_types"].extend(prop["const_types"])
+                grouped_by_type[t]["constants"].extend(prop["constants"])
+            # Перезаписываем сгруппированный список
+            material_src[property_group_name] = list(grouped_by_type.values())
 
         return material_src

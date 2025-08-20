@@ -432,70 +432,23 @@
    "materials" : 
    [
       {
-         "common" : 
-         [
-            {
-               "const_dep" : 
-               [
-                  [ "AAAAAAAA8D8AAAAAAAAAQAAAAAAAAAhA" ],
-                  "",
-                  "",
-                  "",
-                  ""
-               ],
-               "const_dep_size" : [ 3, 0, 0, 0, 0 ],
-               "const_names" : [ 0, 1, 2, 3, 4 ],
-               "const_types" : 
-               [
-                  [ 8 ],
-                  0,
-                  0,
-                  0,
-                  0
-               ],
-               "constants" : 
-               [
-                  "AAAAAAAA8D8AAAAAAIBFQAAAAAAAAAhA",
-                  "AAAAAAAAAAA=",
-                  "AAAAAAAAAAA=",
-                  "AAAAAAAAAAA=",
-                  "AAAAAAAAAAA="
-               ],
-               "type" : 0
-            }
-         ],
          "elasticity" : 
          [
             {
-               "const_dep" : 
-               [
-                  [ "AAAAAAAA8D8AAAAAAAAAQAAAAAAAAAhAAAAAAAAAEEAAAAAAAAAUQAAAAAAAABhA" ],
-                  "",
-                  ""
-               ],
-               "const_dep_size" : [ 6, 0, 0 ],
-               "const_names" : [ 3, 79, 80 ],
-               "const_types" : 
-               [
-                  [ 4 ],
-                  0,
-                  0
-               ],
-               "constants" : 
-               [
-                  "AAAAAAAAIkAAAAAAAAAgQAAAAAAAABxAAAAAAAAAGEAAAAAAAAAUQAAAAAAAABBA",
-                  "AAAAAAAAAAA=",
-                  "AAAAAAAAAAA="
-               ],
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 0, 1 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
                "type" : 0
             },
             {
                "const_dep" : [ "", "" ],
                "const_dep_size" : [ 0, 0 ],
-               "const_names" : [ 37, 38 ],
+               "const_names" : [ 11, 36 ],
                "const_types" : [ 0, 0 ],
                "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
-               "type" : 10
+               "type" : 9
             }
          ],
          "geomechanic" : 
@@ -519,14 +472,52 @@
                "type" : 0
             }
          ],
+         "hardening" : 
+         [
+            {
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 2, 10 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 0
+            }
+         ],
          "id" : 1,
-         "name" : "\u0423\u0433\u043b\u0435\u0440\u043e\u0434\u0438\u0441\u0442\u0430\u044f \u0441\u0442\u0430\u043b\u044c",
+         "name" : "Hook 1",
+         "plasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0 ],
+               "const_names" : [ 7, 8, 9 ],
+               "const_types" : [ 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 9
+            }
+         ],
          "preload" : 
          [
             {
                "const_dep" : [ "", "", "", "", "", "" ],
                "const_dep_size" : [ 0, 0, 0, 0, 0, 0 ],
                "const_names" : [ 0, 1, 2, 3, 4, 5 ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 0
+            },
+            {
+               "const_dep" : [ "", "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0 ],
+               "const_names" : [ 6, 7, 8, 9, 10, 11 ],
                "const_types" : [ 0, 0, 0, 0, 0, 0 ],
                "constants" : 
                [
@@ -615,7 +606,7 @@
                "const_dep_size" : [ 0, 0 ],
                "const_names" : [ 0, 1 ],
                "const_types" : [ 0, 0 ],
-               "constants" : [ "AAAAgHTSukE=", "AAAAAAAAAAA=" ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
                "type" : 0
             },
             {
@@ -667,15 +658,114 @@
                "constants" : [ "AAAAAAAAAAA=" ],
                "type" : 0
             }
-         ],
-         "thermal" : 
+         ]
+      },
+      {
+         "elasticity" : 
          [
             {
                "const_dep" : [ "", "" ],
                "const_dep_size" : [ 0, 0 ],
-               "const_names" : [ 2, 4 ],
+               "const_names" : [ 7, 2 ],
                "const_types" : [ 0, 0 ],
-               "constants" : [ "AAAAAABAf0A=", "AAAAAAAAAAA=" ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 0
+            },
+            {
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 37, 38 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 10
+            }
+         ],
+         "id" : 2,
+         "name" : "Hook 2",
+         "plasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0, 0 ],
+               "const_names" : [ 0, 24, 25, 26, 29, 27, 28 ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 7
+            }
+         ],
+         "swelling" : 
+         [
+            {
+               "const_dep" : [ "" ],
+               "const_dep_size" : [ 0 ],
+               "const_names" : [ 0 ],
+               "const_types" : [ 0 ],
+               "constants" : [ "AAAAAAAAAAA=" ],
+               "type" : 0
+            }
+         ]
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0 ],
+               "const_names" : [ 3, 79, 80 ],
+               "const_types" : [ 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 0
+            },
+            {
+               "const_dep" : [ "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0 ],
+               "const_names" : [ 11, 36, 37, 38 ],
+               "const_types" : [ 0, 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 13
+            }
+         ],
+         "hardening" : 
+         [
+            {
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 2, 10 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 0
+            }
+         ],
+         "id" : 3,
+         "name" : "Hook 3",
+         "plasticity" : 
+         [
+            {
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 0, 5 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 1
+            }
+         ],
+         "thermal" : 
+         [
+            {
+               "const_dep" : [ "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0 ],
+               "const_names" : [ 2, 3, 4 ],
+               "const_types" : [ 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
                "type" : 0
             },
             {
@@ -683,10 +773,556 @@
                "const_dep_size" : [ 0, 0 ],
                "const_names" : [ 1, 0 ],
                "const_types" : [ 0, 0 ],
-               "constants" : [ "AAAAAACARkA=", "VOQQcXMq6T4=" ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
                "type" : 0
             }
          ]
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : 
+               [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+               ],
+               "const_dep_size" : 
+               [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+               ],
+               "const_names" : 
+               [
+                  39,
+                  48,
+                  57,
+                  66,
+                  40,
+                  49,
+                  58,
+                  67,
+                  41,
+                  50,
+                  59,
+                  68,
+                  42,
+                  51,
+                  60,
+                  69,
+                  43,
+                  52,
+                  61,
+                  70,
+                  44,
+                  53,
+                  62,
+                  71,
+                  45,
+                  54,
+                  63,
+                  72,
+                  46,
+                  55,
+                  64,
+                  73,
+                  47,
+                  56,
+                  65,
+                  74
+               ],
+               "const_types" : 
+               [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+               ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 14
+            }
+         ],
+         "id" : 4,
+         "name" : "Hook 4",
+         "plasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0 ],
+               "const_names" : [ 42, 43, 44, 45 ],
+               "const_types" : [ 0, 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 8
+            }
+         ],
+         "swelling" : 
+         [
+            {
+               "const_dep" : [ "" ],
+               "const_dep_size" : [ 0 ],
+               "const_names" : [ 0 ],
+               "const_types" : [ 0 ],
+               "constants" : [ "AAAAAAAAAAA=" ],
+               "type" : 0
+            }
+         ]
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0 ],
+               "const_names" : [ 27, 28, 29 ],
+               "const_types" : [ 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 11
+            }
+         ],
+         "id" : 5,
+         "name" : "MOONY 5"
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0 ],
+               "const_names" : [ 4, 5, 6 ],
+               "const_types" : [ 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 3
+            }
+         ],
+         "id" : 6,
+         "name" : "BLEYZ_KO 6"
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0 ],
+               "const_names" : [ 7, 2, 8, 9, 10 ],
+               "const_types" : [ 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 4
+            }
+         ],
+         "id" : 7,
+         "name" : "MURNAGHAN 7"
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 7, 2 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 20
+            }
+         ],
+         "id" : 8,
+         "name" : "NEO_HOOK 8",
+         "plasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0 ],
+               "const_names" : [ 42, 43, 44, 45 ],
+               "const_types" : [ 0, 0, 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 8
+            }
+         ]
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "const_names" : [ 11, 12, 13, 24, 26, 25, 21, 23, 22 ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 1
+            }
+         ],
+         "id" : 9,
+         "name" : "ORTHOTROPIC 9",
+         "plasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "", "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "const_names" : [ 0, 12, 13, 14, 15, 16, 17, 18, 19, 20 ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 3
+            }
+         ]
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0 ],
+               "const_names" : [ 16, 17, 18, 19, 20 ],
+               "const_types" : [ 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 2
+            }
+         ],
+         "id" : 10,
+         "name" : "TRANSVERSAL_ISOTROPIC 10"
+      },
+      {
+         "elasticity" : 
+         [
+            {
+               "const_dep" : 
+               [
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  ""
+               ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "const_names" : 
+               [
+                  82,
+                  83,
+                  84,
+                  85,
+                  86,
+                  87,
+                  88,
+                  89,
+                  90,
+                  91,
+                  92,
+                  93,
+                  94,
+                  95,
+                  96,
+                  97,
+                  98,
+                  99,
+                  100,
+                  101,
+                  102
+               ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 21
+            }
+         ],
+         "id" : 11,
+         "name" : "ANISOTROPIC 11"
+      },
+      {
+         "common" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0 ],
+               "const_names" : [ 0, 1, 2, 3, 4 ],
+               "const_types" : [ 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 0
+            }
+         ],
+         "id" : 12,
+         "name" : "COMMON 12"
+      },
+      {
+         "id" : 13,
+         "name" : "ISOTROPIC STRESS 13",
+         "strength" : 
+         [
+            {
+               "const_dep" : [ "", "" ],
+               "const_dep_size" : [ 0, 0 ],
+               "const_names" : [ 0, 1 ],
+               "const_types" : [ 0, 0 ],
+               "constants" : [ "AAAAAAAAAAA=", "AAAAAAAAAAA=" ],
+               "type" : 0
+            }
+         ]
+      },
+      {
+         "id" : 14,
+         "name" : "ORTHOTROPIC STRESS 14",
+         "strength" : 
+         [
+            {
+               "const_dep" : [ "", "", "", "", "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "const_names" : [ 2, 3, 4, 5, 6, 7, 8, 9, 10 ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 2
+            },
+            {
+               "const_dep" : [ "", "", "", "", "", "", "", "", "" ],
+               "const_dep_size" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "const_names" : [ 11, 12, 13, 14, 15, 16, 17, 18, 19 ],
+               "const_types" : [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+               "constants" : 
+               [
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA=",
+                  "AAAAAAAAAAA="
+               ],
+               "type" : 2
+            }
+         ]
+      },
+      {
+         "id" : 15,
+         "name" : "PLASTISITY 15"
       }
    ],
    "mesh" : 
@@ -889,7 +1525,7 @@
          "data" : [ "AAAAAAAAIEA=", "", "" ],
          "dep_var_num" : [ "", "", "" ],
          "dep_var_size" : [ 0, 0, 0 ],
-         "dependency_type" : [ 0, 0, 0 ],
+         "dependency_type" : [ 0, "", "" ],
          "flag" : [ 15, 0, 0 ],
          "id" : 1,
          "name" : "angular velocity"

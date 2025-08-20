@@ -75,7 +75,21 @@ RESTRAINT_FLAGS_KEYS = {
     16: 'Fluence',                  # ГУ по флюенсу (дозе). Длина массива равна 1.
 }
 
-class SrcFCLoadStrict(TypedDict):
+RESTRAINT_FLAGS_CODES: Dict[str, int] = {code: key for key, code in RESTRAINT_FLAGS_KEYS.items()}
+
+
+INITIAL_SET_TYPES_KEYS = {
+    0: "Displacement",
+    1: "Velocity",
+    2: "AngularVelocity",
+    3: "Temperature",
+    4: "PorePressure"
+}
+
+INITIAL_SET_TYPES_CODES: Dict[str, int] = {code: key for key, code in INITIAL_SET_TYPES_KEYS.items()}
+
+
+class FCSrcLoadStrict(TypedDict):
     apply_to: str
     apply_to_size: int
     name: str
@@ -86,11 +100,11 @@ class SrcFCLoadStrict(TypedDict):
     dep_var_size: List[int]
     dependency_type: List[Union[int, List[int]]]
 
-class SrcFCLoad(SrcFCLoadStrict, total=False):
+class FCSrcLoad(FCSrcLoadStrict, total=False):
     cs: int
 
 
-class SrcFCRestraintStrict(TypedDict):
+class FCSrcRestraintStrict(TypedDict):
     apply_to: str
     apply_to_size: int
     name: str
@@ -98,25 +112,26 @@ class SrcFCRestraintStrict(TypedDict):
     data: List[str]
     dep_var_num: List[Union[str, List[str]]]
     dep_var_size: List[int]
-    dependency_type: List[Union[int, List[int]]]
+    dependency_type: List[Union[int, str, List[int]]]
     flag: List[int]
 
-class SrcFCRestraint(SrcFCRestraintStrict, total=False):
+class FCSrcRestraint(FCSrcRestraintStrict, total=False):
     cs: int
 
 
-class SrcFCInitialSetStrict(TypedDict):
+class FCSrcInitialSetStrict(TypedDict):
     apply_to: str
     apply_to_size: int
     id: int
     data: List[str]
     dep_var_num: List[Union[str, List[str]]]
     dep_var_size: List[int]
-    dependency_type: List[Union[int, List[int]]]
+    dependency_type: List[Union[int, str, List[int]]]
     flag: List[int]
+    type: int
 
 
-class SrcFCInitialSet(SrcFCInitialSetStrict, total=False):
+class FCSrcInitialSet(FCSrcInitialSetStrict, total=False):
     cs: int
 
 
@@ -129,7 +144,7 @@ class FCLoad:
     cs_id: int
     data: List[FCData]
 
-    def __init__(self, src_load: SrcFCLoad):
+    def __init__(self, src_load: FCSrcLoad):
 
         self.id = src_load['id']
         self.name = src_load['name']
@@ -153,9 +168,9 @@ class FCLoad:
                     dep_var_i
                 ))
 
-    def dump(self) -> SrcFCLoad:
+    def dump(self) -> FCSrcLoad:
 
-        load_src: SrcFCLoad = {
+        load_src: FCSrcLoad = {
             'id': self.id,
             'name': self.name,
             'type': LOADS_TYPES_CODES[self.type],
@@ -191,7 +206,7 @@ class FCRestraint:
     data: List[FCData]
     flags: List[str]
 
-    def __init__(self, src_restraint:SrcFCRestraint):
+    def __init__(self, src_restraint:FCSrcRestraint):
 
         self.id = src_restraint['id']
         self.name = src_restraint['name']
@@ -216,9 +231,9 @@ class FCRestraint:
         self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in src_restraint['flag']]
 
 
-    def dump(self) -> SrcFCRestraint:
+    def dump(self) -> FCSrcRestraint:
 
-        src_restraint: SrcFCRestraint = {
+        src_restraint: FCSrcRestraint = {
             'id': self.id,
             'name': self.name,
             'apply_to': self.apply.dump(),
@@ -237,11 +252,13 @@ class FCRestraint:
         for data in self.data:
             src_data, src_types, src_deps = data.dump()
             src_restraint['data'].append(src_data)
-            dep_types: Union[int, List[int]] = src_types  # type: ignore[assignment]
-            dep_vars: Union[str, List[str]] = src_deps    # type: ignore[assignment]
+            dep_types: Union[int, str, List[int]] = src_types  
+            dep_vars: Union[str, List[str]] = src_deps 
             src_restraint['dependency_type'].append(dep_types)
             src_restraint['dep_var_num'].append(dep_vars)
             src_restraint['dep_var_size'].append(len(data))
+
+        src_restraint['flag'] = [RESTRAINT_FLAGS_CODES[key] for key in self.flags] 
 
         return src_restraint
 
@@ -252,8 +269,9 @@ class FCInitialSet:
     cs_id: int
     data: List[FCData]
     flags: List[str]
+    type: str
 
-    def __init__(self, src_initial_set:SrcFCInitialSet):
+    def __init__(self, src_initial_set:FCSrcInitialSet):
 
         self.id = src_initial_set['id']
         self.cs_id = src_initial_set.get('cs', 0)
@@ -274,12 +292,14 @@ class FCInitialSet:
                     dep_type_i,
                     dep_var_i
                 ))
+
         self.flags = [RESTRAINT_FLAGS_KEYS[code] for code in src_initial_set['flag']]
 
+        self.type = INITIAL_SET_TYPES_KEYS[src_initial_set['type']]
 
-    def dump(self) -> SrcFCInitialSet:
+    def dump(self) -> FCSrcInitialSet:
 
-        src_initial_set: SrcFCInitialSet = {
+        src_initial_set: FCSrcInitialSet = {
             'id': self.id,
             'apply_to': self.apply.dump(),
             'apply_to_size': len(self.apply),
@@ -287,18 +307,18 @@ class FCInitialSet:
             'dependency_type': [],
             'dep_var_num': [],
             'dep_var_size': [],
-            'flag': []
+            'flag': [RESTRAINT_FLAGS_CODES[key] for key in self.flags],
+            'type': INITIAL_SET_TYPES_CODES[self.type]
         }
 
         if self.cs_id:
             src_initial_set['cs'] = self.cs_id
 
-
         for data in self.data:
             src_data, src_types, src_deps = data.dump()
             src_initial_set['data'].append(src_data)
-            dep_types: Union[int, List[int]] = src_types  # type: ignore[assignment]
-            dep_vars: Union[str, List[str]] = src_deps    # type: ignore[assignment]
+            dep_types: Union[int, str, List[int]] = src_types
+            dep_vars: Union[str, List[str]] = src_deps
             src_initial_set['dependency_type'].append(dep_types)
             src_initial_set['dep_var_num'].append(dep_vars)
             src_initial_set['dep_var_size'].append(len(data))
