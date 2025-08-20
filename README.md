@@ -1,37 +1,102 @@
-# FCModel #
+# FCModel
 
 Строго типизированная объектная модель для формата Fidesys Case (.fc)
 
-Библиотека FCModel предназначена для извлечения и записи данных из файлов FidesysCase (fc) формата.
+FCModel — это библиотека для чтения/создания/записи файлов формата Fidesys Case (`.fc`). Она отражает структуру формата в виде Python‑классов, обеспечивает кодирование/декодирование бинарных полей (Base64) и помогает программно собирать и анализировать модели.
 
-Библиотека может быть полезной пользователям CAE-Fidesys, стремящимся автоматизировать что-то за пределами стандартных интерфейсов Fidesys.
+Поддерживаемые версии Python: ≥ 3.8
 
-Библиотека поддерживает python 3.8 и более поздние версии. 
+## Установка
 
-Основное использование:
-
-```python
-
-from fc_model import FCModel
-
-# считываем файл
-fc_model = FCModel(inputpath)
-
-""" Читаем/пишем данные в fc_model """
-
-# записываем файл
-fc_model.save(outputpath)
-
+```bash
+pip install fc_model
 ```
 
-Если не передать путь в начале, создатся пустая болванка под модель.
+Либо из исходников (src‑layout):
+```bash
+python3 -m pip install -e .
+```
 
-Почти вся спецификация формата описана в библиотеке через систему подсказок типов python 3.8 (в той степени, в какой python этой версии поддерживает типы). Таким образом, если ваша IDE  поддерживает подсказки типов и не выдает ошибки в вашем скрипте, взаимодействующем с описанной структурой данных, скорее всего, у вас нет ошибки на уровне спецификации формата.
+## Быстрый старт
 
-Изучать FCModel проще всего через дебаггер IDE. Коллекции сущностей (материалы, блоки, системы координат, наборы) представлены обычными словарями `Dict[int, Entity]`. Порядок элементов соответствует порядку вставки (упорядоченность dict в Python ≥3.7).
+```python
+from fc_model import FCModel
 
+# Загрузка модели из файла
+m = FCModel("path/to/model.fc")
 
-## Посткриптум ##
+# ... чтение/изменение данных модели ...
 
-Если вы заметили ошибку, пишите на почту antonov@cae-fidesys.com
+# Сохранение в файл
+m.save("path/to/output.fc")
+```
+
+Если путь не передан в конструктор, создаётся пустая модель с инициализированными коллекциями.
+
+## Ключевые сущности (публичное API)
+
+- FCModel: корневой класс модели. Поля соответствуют разделам спецификации: `header`, `coordinate_systems`, `mesh`, `blocks`, `materials`, `property_tables`, `loads`, `restraints`, `initial_sets`, `sets`, `contact_constraints`, `coupling_constraints`, `periodic_constraints`, `receivers`, `settings`.
+- FCMesh, FCElement: сетка (узлы/элементы) и элемент. Mesh кодирует/декодирует массивы `nids`, `nodes`, `elemids`, `elem_types`, `elem_blocks`, `elem_orders`, `elem_parent_ids`, `elems`.
+- FCBlock: блок элементов (связь элементов с материалами и свойствами). Поддерживает опциональные поля `steps` и `material` (многошаговая привязка материалов).
+- FCCoordinateSystem: система координат (id, type, name, origin, dir1, dir2) с Base64‑кодированием векторов.
+- FCMaterial, FCMaterialProperty: материал и его свойства, сгруппированные по разделам (elasticity/common/thermal/...). Поддерживаются константы/табличные зависимости/формулы.
+- FCPropertyTable: таблица свойств (SHELL/BEAM/LUMPMASS/SPRING);
+- FCLoad, FCRestraint, FCInitialSet: нагрузки, закрепления, начальные условия. Поддерживают массивы назначения `apply_to` (в т.ч. строку "all"), зависимости компонент и шаги.
+- FCSet: узловые/граневые наборы (`nodesets`, `sidesets`).
+- FCConstraint: контактные/связывающие/периодические ограничения (структуры переносятся как есть, с дополнительными свойствами).
+- FCReceiver: набор приёмников результатов.
+- FCValue, FCData, FCDependencyColumn: служебные классы для представления значений (массив/формула) и табличных зависимостей (тип + столбцы аргументов).
+
+## Константы и таблицы кодов
+
+В модуле реэкспортированы основные карты из доменных модулей, чтобы их можно было импортировать напрямую:
+
+- Материалы (`from fc_model import ...`):
+  - `FC_MATERIAL_PROPERTY_NAMES_KEYS`, `FC_MATERIAL_PROPERTY_NAMES_CODES`
+  - `FC_MATERIAL_PROPERTY_TYPES_KEYS`, `FC_MATERIAL_PROPERTY_TYPES_CODES`
+
+- Нагрузки/ГУ/НУ:
+  - `FC_LOADS_TYPES_KEYS`, `FC_LOADS_TYPES_CODES`
+  - `FC_RESTRAINT_FLAGS_KEYS`, `FC_RESTRAINT_FLAGS_CODES`
+  - `FC_INITIAL_SET_TYPES_KEYS`, `FC_INITIAL_SET_TYPES_CODES`
+
+- Сетка:
+  - `FC_ELEMENT_TYPES_KEYID`, `FC_ELEMENT_TYPES_KEYNAME`
+
+- Зависимости (`FCData`):
+  - `FC_DEPENDENCY_TYPES_KEYS`, `FC_DEPENDENCY_TYPES_CODES`
+
+Пример использования констант:
+```python
+from fc_model import FC_MATERIAL_PROPERTY_NAMES_KEYS
+names = FC_MATERIAL_PROPERTY_NAMES_KEYS["elasticity"]
+print(names[0])  # YOUNG_MODULE
+```
+
+## Пример: модификация материала
+```python
+from fc_model import FCModel, FCMaterial, FCMaterialProperty, FCData
+
+m = FCModel("case.fc")
+mat_id = next(iter(m.materials))
+mat = m.materials[mat_id]
+
+# Добавим свойство плотности (common.USUAL -> DENSITY) как константу
+prop = FCMaterialProperty(
+    type="USUAL",
+    name="DENSITY",
+    data=FCData(data="", dep_type=0, dep_data="")
+)
+mat.properties.setdefault("common", [[]])[0].append(prop)
+
+m.save("case_updated.fc")
+```
+
+## Соответствие спецификации
+
+Файл спецификации: `docs/FidesysCase.md`. Реализация следует структуре разделов и типам данных, бинарные поля кодируются/декодируются в Base64, предусмотрены базовые проверки согласованности размеров.
+
+## Обратная связь
+
+Если вы нашли ошибку или у вас есть предложение по улучшению — напишите на antonov@cae-fidesys.com.
 
