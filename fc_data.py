@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 from fc_value import FCValue
 
-
+# Dependency types (FCData)
 DEPENDENCY_TYPES: Dict[int, str] = {
     0: "CONSTANT",
     1: "TABULAR_X",

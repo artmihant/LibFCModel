@@ -3,7 +3,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from fc_value import decode, encode
-from fc_dict import FCSrcRequiredId
+
 
 FC_ELEMENT_TYPE_NAME = Literal[
     'NONE',
@@ -654,7 +654,7 @@ class FCSrcElement(TypedDict):
     order: int
 
 
-class FCElement(FCSrcRequiredId):
+class FCElement:
     """
     Определяет один конечный элемент в сетке.
     """

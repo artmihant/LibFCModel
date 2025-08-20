@@ -1,7 +1,6 @@
 # Material property type codes per group
 from typing import Dict, List, Literal, TypedDict, Union
 
-from fc_dict import FCSrcRequiredId
 from fc_data import FCData
 
 
@@ -287,7 +286,7 @@ class FCSrcMaterial(FCSrcMaterialBase, total=False):
     swelling: List[FCSrcMaterialProperty]
 
 
-class FCMaterial(FCSrcRequiredId[FCSrcMaterial]):
+class FCMaterial:
     """
     Определяет материал и набор его физических свойств.
     """
