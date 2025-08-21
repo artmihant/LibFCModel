@@ -83,7 +83,7 @@ class FCModel:
     settings: dict
 
 
-    def __init__(self, filepath=None):
+    def __init__(self, filepath: Optional[str] = None) -> None:
         """
         Инициализирует объект FCModel.
 
@@ -139,12 +139,12 @@ class FCModel:
             self._decode_sets(src_data)
 
 
-    def save(self, filepath):
+    def save(self, filepath: str) -> None:
         with open(filepath, "w") as f:
             json.dump(self.dump(), f, indent=4)
 
 
-    def dump(self):
+    def dump(self) -> Dict[str, Any]:
         """
         Сохраняет текущее состояние модели в файл формата .fc.
 
@@ -176,63 +176,65 @@ class FCModel:
 
         return output_data
 
-    def _decode_header(self, input_data):
-        self.header = input_data.get('header')
+    def _decode_header(self, input_data: Dict[str, Any]) -> None:
+        header_data = input_data.get('header')
+        if header_data is not None:
+            self.header = header_data
 
-    def _encode_header(self, output_data):
+    def _encode_header(self, output_data: Dict[str, Any]) -> None:
         output_data['header'] = self.header
 
-    def _decode_blocks(self, input_data):
+    def _decode_blocks(self, input_data: Dict[str, Any]) -> None:
         self.blocks = {}
         for src in input_data.get('blocks', []):
             blk = FCBlock(src)
             self.blocks[blk.id] = blk
 
-    def _encode_blocks(self, output_data):
+    def _encode_blocks(self, output_data: Dict[str, Any]) -> None:
         if self.blocks:
             output_data['blocks'] = [blk.dump() for blk in self.blocks.values()]
 
-    def _decode_coordinate_systems(self, input_data):
+    def _decode_coordinate_systems(self, input_data: Dict[str, Any]) -> None:
         self.coordinate_systems = {}
         for src in input_data.get('coordinate_systems', []):
             cs = FCCoordinateSystem(src)
             self.coordinate_systems[cs.id] = cs
 
-    def _encode_coordinate_systems(self, output_data):
+    def _encode_coordinate_systems(self, output_data: Dict[str, Any]) -> None:
         if self.coordinate_systems:
             output_data['coordinate_systems'] = [cs.dump() for cs in self.coordinate_systems.values()]
 
 
-    def _decode_contact_constraints(self, input_data):
+    def _decode_contact_constraints(self, input_data: Dict[str, Any]) -> None:
         for cc_src in input_data.get('contact_constraints', []):
             self.contact_constraints.append(FCConstraint(cc_src))
 
 
-    def _encode_contact_constraints(self, output_data):
+    def _encode_contact_constraints(self, output_data: Dict[str, Any]) -> None:
         if self.contact_constraints:
             output_data['contact_constraints'] = []
             for cc in self.contact_constraints:
                 output_data['contact_constraints'].append(cc.dump())
 
-    def _decode_coupling_constraints(self, input_data):
+    def _decode_coupling_constraints(self, input_data: Dict[str, Any]) -> None:
         for cc_src in input_data.get('coupling_constraints', []):
             self.coupling_constraints.append(FCConstraint(cc_src))
 
 
-    def _encode_coupling_constraints(self, output_data):
+    def _encode_coupling_constraints(self, output_data: Dict[str, Any]) -> None:
         if self.coupling_constraints:
             output_data['coupling_constraints'] = []
             for cc in self.coupling_constraints:
                 output_data['coupling_constraints'].append(cc.dump())
 
 
-    def _decode_periodic_constraints(self, input_data):
+    def _decode_periodic_constraints(self, input_data: Dict[str, Any]) -> None:
 
         for cc_src in input_data.get('periodic_constraints', []):
             self.periodic_constraints.append(FCConstraint(cc_src))
 
 
-    def _encode_periodic_constraints(self, output_data):
+    def _encode_periodic_constraints(self, output_data: Dict[str, Any]) -> None:
         if self.periodic_constraints:
             output_data['periodic_constraints'] = []
 
@@ -240,7 +242,7 @@ class FCModel:
                 output_data['periodic_constraints'].append(cc.dump())
 
 
-    def _decode_sets(self, src_data):
+    def _decode_sets(self, src_data: Dict[str, Any]) -> None:
         if 'sets' in src_data:
             self.nodesets = {}
             for ns_src in src_data['sets'].get('nodesets', []):
@@ -252,7 +254,7 @@ class FCModel:
                 self.sidesets[ss.id] = ss
 
 
-    def _encode_sets(self,  src_data):
+    def _encode_sets(self, src_data: Dict[str, Any]) -> None:
         if not (self.nodesets or self.sidesets):
             return
         src_data['sets'] = {}
@@ -262,78 +264,78 @@ class FCModel:
             src_data['sets']['sidesets'] = [ss.dump() for ss in self.sidesets.values()]
 
 
-    def _decode_mesh(self, src_data):
+    def _decode_mesh(self, src_data: Dict[str, Any]) -> None:
         self.mesh.decode(src_data['mesh'])
 
-    def _encode_mesh(self, src_data):
+    def _encode_mesh(self, src_data: Dict[str, Any]) -> None:
         src_data['mesh'] = self.mesh.encode()
 
 
-    def _decode_settings(self, src_data):
+    def _decode_settings(self, src_data: Dict[str, Any]) -> None:
         self.settings = src_data.get('settings', {})
 
-    def _encode_settings(self, src_data):
+    def _encode_settings(self, src_data: Dict[str, Any]) -> None:
         src_data['settings'] = self.settings
 
-    def _decode_property_tables(self, src_data):
+    def _decode_property_tables(self, src_data: Dict[str, Any]) -> None:
         self.property_tables = {}
         for pt_src in src_data.get('property_tables', []):
             pt = FCPropertyTable(pt_src)
             self.property_tables[pt.id] = pt
 
-    def _encode_property_tables(self, src_data):
+    def _encode_property_tables(self, src_data: Dict[str, Any]) -> None:
         if self.property_tables:
             src_data['property_tables'] = [pt.dump() for pt in self.property_tables.values()]
 
 
-    def _decode_materials(self, src_data):
+    def _decode_materials(self, src_data: Dict[str, Any]) -> None:
         self.materials = {}
         for src_material in src_data.get('materials', []):
             material = FCMaterial(src_material)
             self.materials[material.id] = material
 
 
-    def _encode_materials(self, src_data):
+    def _encode_materials(self, src_data: Dict[str, Any]) -> None:
         if self.materials:
             src_data['materials'] = [mat.dump() for mat in self.materials.values()]
 
 
-    def _decode_loads(self, input_data):
+    def _decode_loads(self, input_data: Dict[str, Any]) -> None:
         for src_load in input_data.get('loads', []):
             self.loads.append(FCLoad(src_load))
 
 
-    def _encode_loads(self, output_data):
+    def _encode_loads(self, output_data: Dict[str, Any]) -> None:
         if self.loads:
             output_data['loads'] = []
             for load in self.loads:
                 output_data['loads'].append(load.dump())
 
-    def _decode_restraints(self, input_data):
+    def _decode_restraints(self, input_data: Dict[str, Any]) -> None:
         for src_restraint in input_data.get('restraints', []):
             self.restraints.append(FCRestraint(src_restraint))
 
-    def _encode_restraints(self, output_data):
+    def _encode_restraints(self, output_data: Dict[str, Any]) -> None:
         if self.restraints:
             output_data['restraints'] = []
             for restraint in self.restraints:
                 output_data['restraints'].append(restraint.dump())
 
-    def _decode_initial_sets(self, input_data):
+    def _decode_initial_sets(self, input_data: Dict[str, Any]) -> None:
         for src_initial_set in input_data.get('initial_sets', []):
             self.initial_sets.append(FCInitialSet(src_initial_set))
 
-    def _encode_initial_sets(self, output_data):
+    def _encode_initial_sets(self, output_data: Dict[str, Any]) -> None:
         if self.initial_sets:
             output_data['initial_sets'] = []
             for initial_set in self.initial_sets:
                 output_data['initial_sets'].append(initial_set.dump())
 
-    def _decode_receivers(self, input_data):
+    def _decode_receivers(self, input_data: Dict[str, Any]) -> None:
         for src_receiver in input_data.get('receivers', []):
             self.receivers.append(FCReceiver(src_receiver))
 
-    def _encode_receivers(self, output_data):
+    def _encode_receivers(self, output_data: Dict[str, Any]) -> None:
         if self.receivers:
             output_data['receivers'] = []
             for receiver in self.receivers:

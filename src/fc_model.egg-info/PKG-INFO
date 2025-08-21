@@ -1,6 +1,6 @@
-Metadata-Version: 2.4
+Metadata-Version: 2.1
 Name: fc_model
-Version: 1.1.0
+Version: 1.1.2
 Summary: Strictly typed object model for Fidesys Case (.fc)
 Author-email: Artem Antonov <antonov@cae-fidesys.com>
 License:                                  Apache License
@@ -211,11 +211,11 @@ Classifier: Programming Language :: Python :: 3 :: Only
 Classifier: Programming Language :: Python :: 3.8
 Classifier: License :: OSI Approved :: Apache Software License
 Classifier: Operating System :: OS Independent
+Classifier: Typing :: Typed
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: numpy>=1.20
-Dynamic: license-file
 
 # FCModel
 
