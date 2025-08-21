@@ -2,7 +2,7 @@ from typing import Any, TypedDict, Dict, Union
 
 from numpy import dtype, int32
 
-from fc_value import FCValue
+from .fc_value import FCValue
 
 
 class FCSrcConstraint(TypedDict):

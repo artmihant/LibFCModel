@@ -1,7 +1,7 @@
 # Material property type codes per group
 from typing import Dict, List, Literal, TypedDict, Union
 
-from fc_data import FCData
+from .fc_data import FCData
 
 
 FCMaterialPropertiesTypeLiteral = Literal[

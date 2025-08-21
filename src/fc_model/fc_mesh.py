@@ -2,7 +2,7 @@ from typing import List, Dict, Literal, TypedDict, Union
 import numpy as np
 from numpy.typing import NDArray
 
-from fc_value import decode, encode
+from .fc_value import decode, encode
 
 
 FCElementTypeLiteral = Literal[

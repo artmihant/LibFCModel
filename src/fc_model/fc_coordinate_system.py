@@ -3,7 +3,7 @@ from numpy.typing import NDArray
 
 from numpy import dtype, float64
 
-from fc_value import decode, encode
+from .fc_value import decode, encode
 
 
 

@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, TypedDict, Union
 from numpy import dtype, float64
 from numpy.typing import NDArray
 
-from fc_value import FCValue
+from .fc_value import FCValue
 
 # Dependency types (FCData)
 FC_DEPENDENCY_TYPES_KEYS: Dict[int, str] = {

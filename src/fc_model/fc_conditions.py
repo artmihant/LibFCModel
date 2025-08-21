@@ -2,8 +2,8 @@ from typing import Dict, Union, cast
 from typing import List, Optional, TypedDict
 from numpy import dtype
 
-from fc_data import FCData
-from fc_value import FCValue
+from .fc_data import FCData
+from .fc_value import FCValue
 
 
 FC_LOADS_TYPES_KEYS = {
