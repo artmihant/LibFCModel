@@ -368,3 +368,14 @@ class FCMaterial:
                     src_some_property_group['constants'].append(constants)
 
         return material_src
+
+
+    def __str__(self) -> str:
+        return (
+            f"FCMaterial(id={self.id}, name='{self.name}', properties={self.properties})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCMaterial id={self.id!r} name={self.name!r} properties={self.properties!r}>"
+        )

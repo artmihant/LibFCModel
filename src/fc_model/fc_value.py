@@ -1,13 +1,13 @@
 from base64 import b64decode, b64encode
 import binascii
-from typing import Literal, Tuple, Union
+from typing import Literal, Optional, Tuple, Union
 
 import numpy as np
 from numpy.typing import NDArray
 
 FCValueTypeLiteral = Literal['formula', 'array', 'null']
 
-def isBase64(sb):
+def isBase64(sb: str) -> bool:
     """Проверяет, является ли строка корректной base64 (строгая проверка)."""
     try:
         if isinstance(sb, str):
@@ -27,25 +27,29 @@ def isBase64(sb):
         return False
 
 
-def decode(src: str, dtype:np.dtype = np.dtype('int32')) -> NDArray:
+from typing import TypeVar, Generic
+import numpy as np
+from numpy.typing import NDArray
+
+T = TypeVar('T', bound=np.generic)
+
+def decode(src: str, dtype: Optional[np.dtype[T]] = None) -> NDArray[T]:
     """Декодирует строку base64 в numpy массив с заданным типом данных."""
     if src == '':
-        return np.array([], dtype=dtype) 
+        return np.array([], dtype=dtype if dtype else np.dtype('int32')) 
     data = b64decode(src, validate=True)
-    return np.frombuffer(data, dtype)
+    return np.frombuffer(data, dtype if dtype else np.dtype('int32'))
 
-
-def encode(data: np.ndarray) -> str:
+def encode(data: NDArray[np.generic]) -> str:
     """Кодирует numpy массив в строку base64."""
     return b64encode(data.tobytes()).decode()
-
 
 class FCValue:
 
     type: FCValueTypeLiteral = 'null'
-    data: Union[np.ndarray, str]
+    data: Union[NDArray[np.generic], str]
 
-    def __init__(self, src_data: str, dtype:np.dtype = np.dtype('int32'), value_type: FCValueTypeLiteral='array'):
+    def __init__(self, src_data: str, dtype:np.dtype[np.generic] = np.dtype('int32'), value_type: FCValueTypeLiteral='array'):
 
         if value_type == 'array':
 
@@ -73,7 +77,7 @@ class FCValue:
             self.data = src_data
             self.type = 'formula'
 
-    def resize(self, size: int):
+    def resize(self, size: int) -> None:
         if isinstance(self.data, np.ndarray) and size > 0 and self.data.size % size == 0:
             self.data = self.data.reshape(size, -1)
 
@@ -83,9 +87,15 @@ class FCValue:
         else:
             return self.data
 
-    def __len__(self):
+    def __len__(self) -> int:
         if self.type == 'array':
             return len(self.data)
         else:
             return 0
 
+
+    def __str__(self) -> str:
+        return f"FCValue(type={self.type}, data={self.data})"
+
+    def __repr__(self) -> str:
+        return f"<FCValue type={self.type!r} data={self.data!r}>"

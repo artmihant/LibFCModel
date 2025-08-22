@@ -57,3 +57,16 @@ class FCConstraint:
             src_constraint[key] = self.properties[key] #type:ignore
 
         return src_constraint
+
+
+    def __str__(self) -> str:
+        return (
+            f"FCConstraint(id={self.id}, name='{self.name}', type={self.type}, "
+            f"master={self.master}, slave={self.slave}, properties={self.properties})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCConstraint id={self.id!r} name={self.name!r} type={self.type!r} "
+            f"master={self.master!r} slave={self.slave!r} properties={self.properties!r}>"
+        )

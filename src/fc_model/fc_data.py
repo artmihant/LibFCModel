@@ -1,8 +1,7 @@
 # Dependency (const_types) enumeration mapping
-from typing import Dict, List, Tuple, TypedDict, Union
+from typing import Dict, List, Tuple, Union
 
 from numpy import dtype, float64
-from numpy.typing import NDArray
 
 from .fc_value import FCValue
 
@@ -68,8 +67,17 @@ class FCData:
         else:
             return self.value.dump(), self.type, ""
 
-    def __len__(self):
+    def __len__(self) -> int:
         if not len(self.table):
             return 0
         return len(self.table[0].value)
 
+    def __str__(self) -> str:
+        return (
+            f"FCData(type={self.type}, value={self.value}, table={self.table})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCData type={self.type!r} value={self.value!r} table={self.table!r}>"
+        )

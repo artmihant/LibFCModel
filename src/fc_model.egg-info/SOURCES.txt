@@ -3,7 +3,6 @@ MANIFEST.in
 README.md
 VERSION
 pyproject.toml
-src/fc_model.py
 src/fc_model/__init__.py
 src/fc_model/fc_addons.py
 src/fc_model/fc_blocks.py

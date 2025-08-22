@@ -31,3 +31,8 @@ class FCSet:
             "name": self.name
         }
 
+    def __str__(self) -> str:
+        return f"FCSet(id={self.id}, name='{self.name}', apply_to_size={len(self.apply)})"
+
+    def __repr__(self) -> str:
+        return f"FCSet(id={self.id!r}, name={self.name!r}, apply={self.apply!r})"

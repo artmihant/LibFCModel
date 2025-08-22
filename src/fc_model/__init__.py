@@ -1,19 +1,19 @@
 from __future__ import annotations
 import json
-from typing import Any, TypedDict, List, Dict, Union, Optional
-from numpy.typing import NDArray
 
-from .fc_blocks import *
-from .fc_conditions import *
-from .fc_constraint import *
-from .fc_coordinate_system import *
-from .fc_data import *
-from .fc_materials import *
-from .fc_mesh import *
-from .fc_property_tables import *
-from .fc_receivers import *
-from .fc_set import *
-from .fc_value import *
+from typing import TypedDict, Optional, Dict, Any, List
+
+from .fc_blocks import FCBlock
+from .fc_conditions import FC_INITIAL_SET_TYPES_CODES, FC_INITIAL_SET_TYPES_KEYS, FC_LOADS_TYPES_CODES, FC_LOADS_TYPES_KEYS, FC_RESTRAINT_FLAGS_CODES, FC_RESTRAINT_FLAGS_KEYS, FCInitialSet, FCRestraint, FCLoad
+from .fc_constraint import FCConstraint
+from .fc_coordinate_system import FCCoordinateSystem
+from .fc_data import FC_DEPENDENCY_TYPES_CODES, FC_DEPENDENCY_TYPES_KEYS, FCData, FCDependencyColumn
+from .fc_materials import FC_MATERIAL_PROPERTY_NAMES_CODES, FC_MATERIAL_PROPERTY_NAMES_KEYS, FC_MATERIAL_PROPERTY_TYPES_CODES, FC_MATERIAL_PROPERTY_TYPES_KEYS, FCMaterial, FCMaterialProperty
+from .fc_mesh import FC_ELEMENT_TYPES_KEYID, FC_ELEMENT_TYPES_KEYNAME, FCMesh, FCElement, FCElementType
+from .fc_property_tables import FCPropertyTable
+from .fc_receivers import FCReceiver
+from .fc_set import FCSet
+from .fc_value import FCValue
 
 
 class FCHeader(TypedDict):
@@ -21,6 +21,35 @@ class FCHeader(TypedDict):
     description: str
     version: int
     types: dict[str, int]
+
+
+class FCSettings(TypedDict, total=False):
+    type: str  # Тип расчета ("static", "dynamic", "eigenfrequencies", "buckling", "spectrum", "harmonic", "effectiveprops")
+    dimensions: str  # Размерность задачи ("2D", "3D")
+    plane_state: str  # Вид расчетов для "2D" ("p-stress", "p-strain", "axisym_x", "axisym_y")
+    permission_write: bool  # Разрешить запись на диск при нехватке ОЗУ
+    periodic_bc: bool  # Периодические ГУ для расчета эффективных свойств
+    finite_deformations: bool  # Включить конечные деформации
+    elasticity: bool  # Включить упругость
+    plasticity: bool  # Включить пластичность
+    heat_transfer: bool  # Включить теплопроводность
+    porefluid_transfer: bool  # Включить пьезопроводность
+    slm: bool  # Включить аддитивное производство
+    incompressibility: bool  # Включить несжимаемость
+    preload: bool  # Преднагруженная модель
+    lumpmass: bool  # Использовать лумпингованую диагональную матрицу масс
+    radiation_among_surfaces: bool  # Включить лучистый теплообмен
+    linear_solver: Dict[str, Any]  # Настройки линейного решателя
+    nonlinear_solver: Dict[str, Any]  # Настройки нелинейного решателя
+    damping: Dict[str, Any]  # Настройки демпфирования
+    thermal_gap_settings: Dict[str, Any]  # Настройки решателя для газового зазора
+    eigen_solver: Dict[str, Any]  # Настройки решателя собственных частот
+    dynamics: Dict[str, Any]  # Настройки динамического расчета
+    statics: Dict[str, Any]  # Настройки статического расчета
+    harmonic: Dict[str, Any]  # Настройки гармонического расчета
+    output: Dict[str, Any]  # Настройки вывода данных
+    test_opts: Dict[str, Any]  # Настройки отладочной версии ядра
+
 
 
 class FCModel:
@@ -80,8 +109,7 @@ class FCModel:
     nodesets: Dict[int, FCSet]
     sidesets: Dict[int, FCSet]
 
-    settings: dict
-
+    settings: Dict[str, Any]
 
     def __init__(self, filepath: Optional[str] = None) -> None:
         """
@@ -156,7 +184,7 @@ class FCModel:
             filepath (str): Путь к файлу, в который будет сохранена модель.
         """
 
-        output_data: Dict = {}
+        output_data: Dict[str, Any] = {}
 
         self._encode_blocks(output_data)
         self._encode_contact_constraints(output_data)
@@ -342,12 +370,13 @@ class FCModel:
                 output_data['receivers'].append(receiver.dump())
 
 
+
 __all__ = [
     'FCModel',
     'FCMesh', 'FCBlock', 'FCPropertyTable', 'FCCoordinateSystem', 'FCConstraint',
     'FCElement', 'FCElementType', 'FCMaterial', 'FCLoad', 'FCRestraint', 'FCInitialSet',
     'FCReceiver', 'FCSet', 'FCDependencyColumn', 'FCValue', 'FCData', 'FCHeader',
-    'FCMaterialPropertiesTypeLiteral', 'FCMaterialProperty',
+    'FCMaterialProperty',
     'FC_DEPENDENCY_TYPES_KEYS', 'FC_DEPENDENCY_TYPES_CODES',
     'FC_INITIAL_SET_TYPES_CODES', 'FC_INITIAL_SET_TYPES_KEYS',
     'FC_LOADS_TYPES_CODES', 'FC_LOADS_TYPES_KEYS',

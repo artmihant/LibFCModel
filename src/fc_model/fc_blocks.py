@@ -41,7 +41,7 @@ class FCBlock:
         # Опциональные поля
         self.steps = None
         if 'steps' in src_data:
-            steps_val = src_data.get('steps')  # type: ignore[assignment]
+            steps_val = src_data.get('steps')
             if isinstance(steps_val, list):
                 self.steps = [int(x) for x in steps_val]
             else:
@@ -49,7 +49,7 @@ class FCBlock:
 
         self.material = None
         if 'material' in src_data:
-            mat_val = src_data.get('material')  # type: ignore[assignment]
+            mat_val = src_data.get('material')
             if isinstance(mat_val, dict):
                 ids = mat_val.get('ids', [])
                 stp = mat_val.get('steps', [])
@@ -81,3 +81,15 @@ class FCBlock:
                 'steps': list(self.material['steps']),
             }
         return out 
+
+    def __str__(self) -> str:
+        return (
+            f"FCBlock(id={self.id}, cs_id={self.cs_id}, material_id={self.material_id}, "
+            f"property_id={self.property_id}, steps={self.steps}, material={self.material})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCBlock id={self.id!r} cs_id={self.cs_id!r} material_id={self.material_id!r} "
+            f"property_id={self.property_id!r} steps={self.steps!r} material={self.material!r}>"
+        )

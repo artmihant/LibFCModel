@@ -46,3 +46,15 @@ class FCCoordinateSystem:
             "dir1": encode(self.dir1),
             "dir2": encode(self.dir2)
         }
+
+    def __str__(self) -> str:
+        return (
+            f"FCCoordinateSystem(id={self.id}, type='{self.type}', name='{self.name}', "
+            f"origin={self.origin}, dir1={self.dir1}, dir2={self.dir2})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCCoordinateSystem id={self.id!r} type={self.type!r} name={self.name!r} "
+            f"origin={self.origin!r} dir1={self.dir1!r} dir2={self.dir2!r}>"
+        )

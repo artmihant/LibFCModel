@@ -37,3 +37,13 @@ class FCReceiver:
             "dofs": self.dofs,
             "type": self.type
         }
+
+    def __str__(self) -> str:
+        return (
+            f"FCReceiver(id={self.id}, name='{self.name}', dofs={self.dofs}, type={self.type}, apply_to_size={len(self.apply)})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCReceiver id={self.id!r} name={self.name!r} dofs={self.dofs!r} type={self.type!r} apply={self.apply!r}>"
+        )

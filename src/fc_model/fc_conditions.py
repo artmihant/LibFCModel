@@ -197,13 +197,28 @@ class FCLoad:
         for data in self.data:
             src_data, src_types, src_deps = data.dump()
             load_src['data'].append(src_data)
-            dep_types: Union[int, List[int]] = src_types  # type: ignore[assignment]
-            dep_vars: Union[str, List[str]] = src_deps    # type: ignore[assignment]
+            dep_types: Union[int, str, List[int]] = src_types 
+            if isinstance(dep_types, str):
+                raise TypeError("dep_types должен быть int или List[int], а не str")
+            dep_vars: Union[str, List[str]] = src_deps 
             load_src['dependency_type'].append(dep_types)
             load_src['dep_var_num'].append(dep_vars)
             load_src['dep_var_size'].append(len(data))
 
         return load_src
+
+    def __str__(self) -> str:
+        return (
+            f"FCLoad(id={self.id}, name='{self.name}', type={self.type}, "
+            f"cs_id={self.cs_id}, apply_to_size={len(self.apply)}, data_count={len(self.data)})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCLoad id={self.id!r} name={self.name!r} type={self.type!r} "
+            f"cs_id={self.cs_id!r} apply={self.apply!r} data={self.data!r}>"
+        )
+
 
 
 class FCRestraint:
@@ -279,6 +294,19 @@ class FCRestraint:
 
         return src_restraint
 
+    def __str__(self) -> str:
+        return (
+            f"FCRestraint(id={self.id}, name='{self.name}', apply={self.apply}, cs_id={self.cs_id}, "
+            f"data={self.data}, flags={self.flags})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCRestraint id={self.id!r} name={self.name!r} apply={self.apply!r} cs_id={self.cs_id!r} "
+            f"data={self.data!r} flags={self.flags!r}>"
+        )
+
+
 
 class FCInitialSet:
     id: int
@@ -349,3 +377,16 @@ class FCInitialSet:
             src_initial_set['dep_var_size'].append(len(data))
 
         return src_initial_set
+
+
+    def __str__(self) -> str:
+        return (
+            f"FCInitialSet(id={self.id}, apply={self.apply}, data={self.data}, "
+            f"flags={self.flags}, type={self.type}, cs_id={self.cs_id})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCInitialSet id={self.id!r} apply={self.apply!r} data={self.data!r}, "
+            f"flags={self.flags}, type={self.type}, cs_id={self.cs_id})>"
+        )

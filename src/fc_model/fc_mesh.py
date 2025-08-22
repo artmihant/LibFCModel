@@ -1,4 +1,4 @@
-from typing import List, Dict, Literal, TypedDict, Union
+from typing import Iterator, List, Dict, Literal, TypedDict, Union
 import numpy as np
 from numpy.typing import NDArray
 
@@ -678,7 +678,7 @@ class FCElement:
         self.order = src_element['order']
        
 
-    def dump(self):
+    def dump(self) -> FCSrcElement:
         return {
             'id': self.id,
             'block': self.block,
@@ -720,16 +720,15 @@ class FCMesh:
     elements: Dict[FCElementTypeLiteral, Dict[int, FCElement]]
 
 
-    def __init__(self):
+    def __init__(self) -> None:
 
-        # INSERT_YOUR_CODE
         self.nodes_ids = np.array([], dtype=np.int32)
         self.nodes_xyz = np.array([], dtype=np.float64)
 
         self.elements = {}
 
 
-    def decode(self, src_mesh: FCSrcMesh):
+    def decode(self, src_mesh: FCSrcMesh) -> None:
 
         self.nodes_ids = decode(src_mesh['nids'], np.dtype('int32'))
         nodes_raw = decode(src_mesh['nodes'], np.dtype('float64'))
@@ -747,12 +746,12 @@ class FCMesh:
                 f"nodes xyz count mismatch: {self.nodes_xyz.shape[0]} rows vs {len(self.nodes_ids)} ids"
             )
 
-        elem_blocks = decode(src_mesh['elem_blocks'])
-        elem_orders = decode(src_mesh['elem_orders'])
-        elem_parent_ids = decode(src_mesh['elem_parent_ids'])
-        elem_types = decode(src_mesh['elem_types'], np.dtype('uint8'))
-        elem_ids = decode(src_mesh['elemids'])
-        elem_nodes = decode(src_mesh['elems'])
+        elem_blocks: NDArray[np.int32] = decode(src_mesh['elem_blocks'])
+        elem_orders: NDArray[np.int32] = decode(src_mesh['elem_orders'])
+        elem_parent_ids: NDArray[np.int32] = decode(src_mesh['elem_parent_ids'])
+        elem_types: NDArray[np.uint8] = decode(src_mesh['elem_types'], np.dtype(np.uint8))
+        elem_ids: NDArray[np.int32] = decode(src_mesh['elemids'])
+        elem_nodes: NDArray[np.int32] = decode(src_mesh['elems'])
 
         # basic consistency: elems_count must match arrays' lengths
         elems_count = src_mesh['elems_count']
@@ -796,11 +795,11 @@ class FCMesh:
 
         elems_count = len(self)
 
-        elem_ids: NDArray = np.zeros(elems_count, np.int32)
-        elem_blocks: NDArray = np.zeros(elems_count, np.int32)
-        elem_orders: NDArray = np.zeros(elems_count, np.int32)
-        elem_parent_ids: NDArray = np.zeros(elems_count, np.int32)
-        elem_types: NDArray = np.zeros(elems_count, np.int8)
+        elem_ids: NDArray[np.int32] = np.zeros(elems_count, np.int32)
+        elem_blocks: NDArray[np.int32] = np.zeros(elems_count, np.int32)
+        elem_orders: NDArray[np.int32] = np.zeros(elems_count, np.int32)
+        elem_parent_ids: NDArray[np.int32] = np.zeros(elems_count, np.int32)
+        elem_types: NDArray[np.int8] = np.zeros(elems_count, np.int8)
 
         # basic consistency: nodes arrays
         if self.nodes_xyz.ndim != 2 or self.nodes_xyz.shape[1] != 3:
@@ -821,7 +820,7 @@ class FCMesh:
         expected_nodes_total = 0
         for elem in self:
             expected_nodes_total += FC_ELEMENT_TYPES_KEYNAME[elem.type]['nodes']
-        elem_nodes: NDArray = np.array(self.nodes_list, np.int32)
+        elem_nodes: NDArray[np.int32] = np.array(self.nodes_list, np.int32)
         if len(elem_nodes) != expected_nodes_total:
             raise ValueError(
                 f"flattened nodes length {len(elem_nodes)} != expected {expected_nodes_total} from element types"
@@ -843,28 +842,28 @@ class FCMesh:
         return src_mesh
 
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum([len(self.elements[typename]) for typename in self.elements])
 
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return len(self) > 0
 
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[FCElement]:
         for typename in self.elements:
             for elem in self.elements[typename].values():
                 yield elem
 
 
-    def __contains__(self, key):
+    def __contains__(self, key: Union[int, FCElementTypeLiteral]) -> bool:
         for tp in self.elements:
             if key in self.elements[tp]:
                 return True
         return False
 
 
-    def __getitem__(self, key:Union[int, FCElementTypeLiteral]):
+    def __getitem__(self, key: Union[int, FCElementTypeLiteral]) -> Union[Dict[int, FCElement], FCElement]:
         if isinstance(key, str):
             return self.elements[key]
         elif isinstance(key, int):
@@ -874,7 +873,7 @@ class FCMesh:
         raise KeyError(f'{key}')
 
 
-    def __setitem__(self, key:int, item: FCElement):
+    def __setitem__(self, key: int, item: FCElement) -> None:
 
         if item.type not in self.elements:
             self.elements[item.type] = {}
@@ -882,17 +881,17 @@ class FCMesh:
 
 
     @property
-    def nodes_list(self):
+    def nodes_list(self) -> List[int]:
         return [node for elem in self for node in elem.nodes]
 
 
-    def compress(self):
+    def compress(self) -> Dict[int, int]:
         index_map = {elem.id: i + 1 for i, elem in enumerate(self)}
         self.reindex(index_map)
         return index_map
 
 
-    def reindex(self, index_map):
+    def reindex(self, index_map: Dict[int, int]) -> None:
         for typename in list(self.elements.keys()):
             new_bucket: Dict[int, FCElement] = {}
             for elem in self.elements[typename].values():
@@ -903,7 +902,7 @@ class FCMesh:
 
 
     @property
-    def max_id(self):
+    def max_id(self) -> int:
         max_id = 0
         for tp in self.elements:
             if self.elements[tp]:
@@ -913,7 +912,7 @@ class FCMesh:
         return max_id
 
 
-    def add(self, item: FCElement):
+    def add(self, item: FCElement) -> int:
         if item.type not in self.elements:
             self.elements[item.type] = {}
         if item.id in self or item.id < 1:
@@ -921,3 +920,12 @@ class FCMesh:
         self.elements[item.type][item.id] = item
         return item.id
 
+    def __str__(self) -> str:
+        return (
+            f"FCMesh(nodes_ids={self.nodes_ids}, nodes_xyz={self.nodes_xyz}, elements={self.elements})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCMesh nodes_ids={self.nodes_ids!r} nodes_xyz={self.nodes_xyz!r} elements={self.elements!r}>"
+        )
