@@ -66,7 +66,4 @@ class FCConstraint:
         )
 
     def __repr__(self) -> str:
-        return (
-            f"<FCConstraint id={self.id!r} name={self.name!r} type={self.type!r} "
-            f"master={self.master!r} slave={self.slave!r} properties={self.properties!r}>"
-        )
+        return f"<FCConstraint {self.id!r} {self.name!r} {self.type!r}>"

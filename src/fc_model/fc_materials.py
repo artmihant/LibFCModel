@@ -267,6 +267,15 @@ class FCMaterialProperty:
         self.name = name
         self.data = data
 
+    def __str__(self) -> str:
+        return (
+            f"FCMaterialProperty(type={self.type}, name={self.name}, data={self.data})"
+        )
+
+    def __repr__(self) -> str:
+        return (
+            f"<FCMaterialProperty type={self.type!r} name={self.name!r}>"
+        )
 
 class FCSrcMaterialBase(TypedDict):
     id: int
@@ -377,5 +386,5 @@ class FCMaterial:
 
     def __repr__(self) -> str:
         return (
-            f"<FCMaterial id={self.id!r} name={self.name!r} properties={self.properties!r}>"
+            f"<FCMaterial {self.id!r} {self.name!r}>"
         )

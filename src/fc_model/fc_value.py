@@ -93,9 +93,14 @@ class FCValue:
         else:
             return 0
 
-
     def __str__(self) -> str:
         return f"FCValue(type={self.type}, data={self.data})"
 
     def __repr__(self) -> str:
-        return f"<FCValue type={self.type!r} data={self.data!r}>"
+        data_str = ''
+        if isinstance(self.data, np.ndarray):
+            data_str = f'NDArray<{self.data.dtype}>{self.data.shape}'
+        else:
+            data_str = self.data
+
+        return f"<FCValue {data_str}>"

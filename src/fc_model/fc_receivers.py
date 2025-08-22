@@ -45,5 +45,5 @@ class FCReceiver:
 
     def __repr__(self) -> str:
         return (
-            f"<FCReceiver id={self.id!r} name={self.name!r} dofs={self.dofs!r} type={self.type!r} apply={self.apply!r}>"
+            f"<FCReceiver {self.id!r} {self.name!r}>"
         )

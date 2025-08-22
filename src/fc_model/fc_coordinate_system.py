@@ -54,7 +54,4 @@ class FCCoordinateSystem:
         )
 
     def __repr__(self) -> str:
-        return (
-            f"<FCCoordinateSystem id={self.id!r} type={self.type!r} name={self.name!r} "
-            f"origin={self.origin!r} dir1={self.dir1!r} dir2={self.dir2!r}>"
-        )
+        return f"<FCCoordinateSystem id={self.id!r} type={self.type!r} name={self.name!r}>"

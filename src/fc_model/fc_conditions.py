@@ -214,10 +214,7 @@ class FCLoad:
         )
 
     def __repr__(self) -> str:
-        return (
-            f"<FCLoad id={self.id!r} name={self.name!r} type={self.type!r} "
-            f"cs_id={self.cs_id!r} apply={self.apply!r} data={self.data!r}>"
-        )
+        return f"<FCLoad {self.id!r} {self.name} {self.type}>"
 
 
 
@@ -302,8 +299,7 @@ class FCRestraint:
 
     def __repr__(self) -> str:
         return (
-            f"<FCRestraint id={self.id!r} name={self.name!r} apply={self.apply!r} cs_id={self.cs_id!r} "
-            f"data={self.data!r} flags={self.flags!r}>"
+            f"<FCRestraint {self.id!r} {self.name} {self.flags}>"
         )
 
 
@@ -387,6 +383,5 @@ class FCInitialSet:
 
     def __repr__(self) -> str:
         return (
-            f"<FCInitialSet id={self.id!r} apply={self.apply!r} data={self.data!r}, "
-            f"flags={self.flags}, type={self.type}, cs_id={self.cs_id})>"
+            f"<FCInitialSet {self.id!r} {self.type} {self.flags}>"
         )

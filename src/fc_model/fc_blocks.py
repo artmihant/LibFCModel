@@ -90,6 +90,5 @@ class FCBlock:
 
     def __repr__(self) -> str:
         return (
-            f"<FCBlock id={self.id!r} cs_id={self.cs_id!r} material_id={self.material_id!r} "
-            f"property_id={self.property_id!r} steps={self.steps!r} material={self.material!r}>"
+            f"<FCBlock {self.id!r}>"
         )

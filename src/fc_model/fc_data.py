@@ -79,5 +79,5 @@ class FCData:
 
     def __repr__(self) -> str:
         return (
-            f"<FCData type={self.type!r} value={self.value!r} table={self.table!r}>"
+            f"<FCData {self.type!r}({len(self)}))>"
         )

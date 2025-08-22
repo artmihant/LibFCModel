@@ -36,5 +36,5 @@ class FCPropertyTable:
 
     def __repr__(self) -> str:
         return (
-            f"<FCPropertyTable id={self.id!r} type={self.type!r} properties={self.properties!r} additional_properties={self.additional_properties!r}>"
+            f"<FCPropertyTable {self.id!r} {self.type!r}>"
         )

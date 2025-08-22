@@ -47,45 +47,6 @@
    },
    "sets" : 
    {
-      "nodesets" : 
-      [
-         {
-            "apply_to" : "AwAAAAUAAAAHAAAACAAAAAEAAAACAAAABAAAAAYAAAAJAAAA",
-            "apply_to_size" : 9,
-            "id" : 1,
-            "name" : ""
-         },
-         {
-            "apply_to" : "DAAAAA4AAAAQAAAAEQAAAAoAAAALAAAADQAAAA8AAAASAAAA",
-            "apply_to_size" : 9,
-            "id" : 2,
-            "name" : ""
-         },
-         {
-            "apply_to" : "EwAAAA4AAAAUAAAACAAAAAYAAAANAAAACwAAAAEAAAAVAAAA",
-            "apply_to_size" : 9,
-            "id" : 3,
-            "name" : ""
-         },
-         {
-            "apply_to" : "FgAAABAAAAATAAAABwAAAAQAAAAPAAAADQAAAAYAAAAXAAAA",
-            "apply_to_size" : 9,
-            "id" : 4,
-            "name" : ""
-         },
-         {
-            "apply_to" : "GAAAABEAAAAWAAAABQAAAAIAAAAKAAAADwAAAAQAAAAZAAAA",
-            "apply_to_size" : 9,
-            "id" : 5,
-            "name" : ""
-         },
-         {
-            "apply_to" : "FAAAAAwAAAAYAAAAAwAAAAEAAAALAAAACgAAAAIAAAAaAAAA",
-            "apply_to_size" : 9,
-            "id" : 6,
-            "name" : ""
-         }
-      ],
       "sidesets" : 
       [
          {
@@ -128,6 +89,72 @@
             "apply_to" : "",
             "apply_to_size" : 0,
             "id" : 7,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 8,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 9,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 10,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 11,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 12,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 13,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 14,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 15,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 16,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 17,
+            "name" : ""
+         },
+         {
+            "apply_to" : "",
+            "apply_to_size" : 0,
+            "id" : 18,
             "name" : ""
          }
       ]

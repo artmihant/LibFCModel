@@ -927,5 +927,5 @@ class FCMesh:
 
     def __repr__(self) -> str:
         return (
-            f"<FCMesh nodes_ids={self.nodes_ids!r} nodes_xyz={self.nodes_xyz!r} elements={self.elements!r}>"
+            f"<FCMesh nodes:{len(self.nodes_ids)} elements:{len(self)}>"
         )
